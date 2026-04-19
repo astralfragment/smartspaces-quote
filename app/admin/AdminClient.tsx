@@ -14,9 +14,18 @@ declare global {
   }
 }
 
+async function waitForAppBridge(timeoutMs = 8000): Promise<NonNullable<Window["shopify"]>> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const bridge = (globalThis as unknown as { shopify?: Window["shopify"] }).shopify;
+    if (bridge?.idToken) return bridge;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  throw new Error("App Bridge failed to load. Open this app from Shopify admin (Apps \u2192 SmartSpaces Quote).");
+}
+
 async function getToken(): Promise<string> {
-  const bridge = (globalThis as unknown as { shopify?: Window["shopify"] }).shopify;
-  if (!bridge?.idToken) throw new Error("App Bridge not loaded. Open this app from your Shopify admin.");
+  const bridge = await waitForAppBridge();
   return await bridge.idToken();
 }
 
