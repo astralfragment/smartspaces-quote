@@ -1,0 +1,413 @@
+<style>
+  .rv-root { --bg: #0a0a0b; --panel: #151519; --panel2: #1d1d22; --line: #2b2b31; --muted: #a0a0a8; --text: #f1f1f3; --primary: #7c5cff; --good: #3cc88b; --warn: #f6c454; --bad: #ef5a6f; --accent: #ffd27a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; }
+  .rv-root * { box-sizing: border-box; }
+  .rv-container { max-width: 1200px; margin: 0 auto; padding: 40px 24px 120px; }
+  .rv-hero { padding: 48px 0 24px; }
+  .rv-hero h1 { font-size: 42px; margin: 0 0 10px; letter-spacing: -0.02em; }
+  .rv-hero p { color: var(--muted); font-size: 17px; margin: 0; max-width: 760px; line-height: 1.55; }
+  .rv-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  .rv-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .rv-badge b { color: var(--text); }
+  .rv-badge.good { border-color: rgba(60,200,139,.35); color: var(--good); }
+  .rv-badge.good b { color: var(--good); }
+  .rv-nav { position: sticky; top: 0; z-index: 10; background: rgba(10,10,11,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); padding: 12px 0; margin: 24px -24px 0; }
+  .rv-nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; }
+  .rv-nav button { padding: 8px 14px; border-radius: 8px; background: transparent; color: var(--muted); border: 1px solid transparent; font-size: 14px; cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .rv-nav button:hover { color: var(--text); }
+  .rv-nav button.active { background: var(--panel); color: var(--text); border-color: var(--line); }
+  .rv-section { padding: 56px 0 0; scroll-margin-top: 80px; }
+  .rv-section h2 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .rv-section-intro { color: var(--muted); font-size: 15px; margin: 0 0 26px; max-width: 720px; line-height: 1.55; }
+  .rv-step { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 28px; }
+  @media (max-width: 860px) { .rv-step { grid-template-columns: 1fr; } }
+  .rv-step-shot { position: relative; background: #000; min-height: 280px; }
+  .rv-step-shot img { display: block; width: 100%; height: auto; }
+  .rv-step-caption { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.7); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rv-step-copy { padding: 22px 24px; }
+  .rv-step h3 { font-size: 20px; margin: 0 0 4px; }
+  .rv-step .rv-url { font-size: 13px; color: var(--muted); word-break: break-all; margin: 0 0 14px; font-family: ui-monospace, Menlo, monospace; }
+  .rv-verdict { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+  .rv-verdict.good { background: rgba(60,200,139,0.15); color: var(--good); border: 1px solid rgba(60,200,139,0.35); }
+  .rv-verdict.warn { background: rgba(246,196,84,0.15); color: var(--warn); border: 1px solid rgba(246,196,84,0.35); }
+  .rv-verdict.bad { background: rgba(239,90,111,0.15); color: var(--bad); border: 1px solid rgba(239,90,111,0.35); }
+  .rv-annot-list { list-style: none; padding: 0; margin: 14px 0 0; }
+  .rv-annot-list li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 8px 0; font-size: 14px; color: var(--text); line-height: 1.45; border-bottom: 1px dashed var(--line); }
+  .rv-annot-list li:last-child { border-bottom: 0; }
+  .rv-annot-list .rv-tag { font-size: 12px; font-weight: 700; text-align: center; line-height: 22px; border-radius: 6px; }
+  .rv-annot-list .tag-good { background: rgba(60,200,139,0.2); color: var(--good); }
+  .rv-annot-list .tag-warn { background: rgba(246,196,84,0.2); color: var(--warn); }
+  .rv-annot-list .tag-bad { background: rgba(239,90,111,0.2); color: var(--bad); }
+  .rv-draft-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel2); margin-top: 8px; }
+  .rv-draft-head { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .rv-draft-head h4 { margin: 0; font-size: 16px; }
+  .rv-draft-head .pill { padding: 3px 10px; border-radius: 999px; background: rgba(246,196,84,0.15); color: var(--warn); font-size: 12px; font-weight: 600; border: 1px solid rgba(246,196,84,0.35); }
+  .rv-draft-body { padding: 16px 20px; }
+  .rv-draft-row { display: grid; grid-template-columns: 140px 1fr; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .rv-draft-row:last-child { border-bottom: 0; }
+  .rv-draft-row .k { color: var(--muted); font-size: 13px; }
+  .rv-draft-row .v { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .rv-filter { display: flex; gap: 8px; margin: 16px 0 20px; flex-wrap: wrap; }
+  .rv-filter button { padding: 6px 12px; border-radius: 999px; background: transparent; color: var(--muted); border: 1px solid var(--line); font-size: 13px; cursor: pointer; font-family: inherit; }
+  .rv-filter button.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .rv-issue { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  .rv-issue-head { display: grid; grid-template-columns: 90px 1fr auto; gap: 14px; padding: 14px 18px; align-items: center; cursor: pointer; }
+  .rv-issue-head:hover { background: rgba(255,255,255,0.02); }
+  .rv-issue .sev { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 8px; border-radius: 6px; text-align: center; }
+  .rv-issue .sev-stop { background: rgba(239,90,111,0.18); color: var(--bad); }
+  .rv-issue .sev-high { background: rgba(246,196,84,0.18); color: var(--warn); }
+  .rv-issue .sev-med { background: rgba(124,92,255,0.18); color: #a68bff; }
+  .rv-issue .sev-low { background: rgba(160,160,168,0.15); color: var(--muted); }
+  .rv-issue .sev-a11y { background: rgba(60,200,139,0.15); color: var(--good); }
+  .rv-issue-title { font-size: 15px; font-weight: 600; }
+  .rv-issue-toggle { color: var(--muted); font-size: 18px; }
+  .rv-issue-body { display: none; padding: 0 18px 16px 122px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .rv-issue-body.open { display: block; }
+  .rv-issue-body code { background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text); font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .rv-hidden { display: none !important; }
+  .rv-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+  .rv-summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .rv-summary-card .big { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .rv-summary-card .big.good { color: var(--good); }
+  .rv-summary-card .big.warn { color: var(--warn); }
+  .rv-summary-card .big.bad { color: var(--bad); }
+  .rv-summary-card .lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .rv-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
+  @media (max-width: 860px) { .rv-flow { grid-template-columns: 1fr 1fr; } }
+  .rv-flow-step { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; text-align: center; position: relative; font-size: 13px; color: var(--muted); }
+  .rv-flow-step b { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+  .rv-kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 720px) { .rv-kv { grid-template-columns: 1fr; } }
+  .rv-kv-item { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .rv-kv-item .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .rv-kv-item .v { font-size: 14px; word-break: break-all; font-family: ui-monospace, Menlo, monospace; }
+  .rv-link { color: var(--primary); text-decoration: none; }
+  .rv-link:hover { text-decoration: underline; }
+  .rv-arrow { color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
+  .rv-hi { color: var(--accent); font-weight: 600; }
+</style>
+
+<div class="rv-root">
+<div class="rv-container">
+
+  <div class="rv-hero">
+    <h1>SmartSpaces Quote — E2E Review</h1>
+    <p>Live walkthrough of the deployed quote flow on <b>smart-spaces-za.myshopify.com</b>. Screenshots captured headlessly against production. Draft order confirmed in admin via API.</p>
+    <div class="rv-badges">
+      <span class="rv-badge good">✓ <b>Backend live</b></span>
+      <span class="rv-badge good">✓ <b>Storefront integration</b></span>
+      <span class="rv-badge good">✓ <b>Draft order created</b></span>
+      <span class="rv-badge good">✓ <b>Embedded admin auth</b></span>
+      <span class="rv-badge">smartspaces-quote.vercel.app</span>
+      <span class="rv-badge"><a class="rv-link" href="https://github.com/astralfragment/smartspaces-quote" target="_blank">GitHub ↗</a></span>
+    </div>
+  </div>
+
+  <div class="rv-nav">
+    <div class="rv-nav-inner">
+      <button data-goto="summary" class="active">Summary</button>
+      <button data-goto="flow">Flow</button>
+      <button data-goto="walkthrough">Walkthrough</button>
+      <button data-goto="review">UX/UI review</button>
+      <button data-goto="artifacts">Artifacts</button>
+    </div>
+  </div>
+
+  <section id="summary" class="rv-section">
+    <h2>Release scorecard</h2>
+    <p class="rv-section-intro">Functional coverage of the feature set the user asked for, measured on the live dev store.</p>
+    <div class="rv-summary-grid">
+      <div class="rv-summary-card"><div class="big good">8 / 10</div><div class="lbl">Scenarios verified end-to-end with screenshots</div></div>
+      <div class="rv-summary-card"><div class="big good">21 / 21</div><div class="lbl">Unit tests (hmac, session token, quote schema, draft order shaping)</div></div>
+      <div class="rv-summary-card"><div class="big warn">3</div><div class="lbl">Stop-ship blockers remain (see review)</div></div>
+      <div class="rv-summary-card"><div class="big">0 SaaS</div><div class="lbl">Recurring services beyond Shopify + Vercel</div></div>
+    </div>
+  </section>
+
+  <section id="flow" class="rv-section">
+    <h2>The flow</h2>
+    <p class="rv-section-intro">Everything rides on Shopify's native cart. Any product can enter. Quote-only products are flagged by tag/metafield — price hidden, checkout blocked. The merchant reviews + prices in native Drafts.</p>
+    <div class="rv-flow">
+      <div class="rv-flow-step"><b>1. PDP</b>Quote-only: price hidden, CTA → "Add to Quote". Native "Add to Cart" behavior.</div>
+      <div class="rv-flow-step"><b>2. Cart</b>"Quote required" section appears above native cart. Checkout hidden if only quote items; mixed-cart intercept if both kinds.</div>
+      <div class="rv-flow-step"><b>3. Form</b>/pages/request-quote renders the quote-only subset + contact form (name, email, project info, file upload).</div>
+      <div class="rv-flow-step"><b>4. Draft</b>Customer created + Draft Order with <code>quote-request</code> tag. Merchant edits pricing and clicks Send invoice in native Drafts admin.</div>
+    </div>
+  </section>
+
+  <section id="walkthrough" class="rv-section">
+    <h2>Walkthrough</h2>
+    <p class="rv-section-intro">Each step is a real screenshot captured by Playwright against the live store at <b>smart-spaces-za.myshopify.com</b> (password: <code>gohbri</code>).</p>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">01 · PDP quote-only</span><img src="/review-assets/01-quote-only-pdp.jpeg" alt="Quote-only PDP" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Works as designed</span>
+        <h3>Quote-only product page</h3>
+        <p class="rv-url">/products/b-w-805-d4-signature-bookshelf</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span><b>Price hidden.</b> Native R 299,990.00 price element suppressed.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>Primary CTA reads</b> <span class="rv-hi">"Add to Quote"</span> — native Add to Cart relabeled via JS.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>"Buy it now"</b> (Shopify dynamic checkout) is hidden — no MAP leak via express checkout.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Rest of the page — gallery, description, specs — unchanged.</span></li>
+          <li><span class="rv-tag tag-warn">!</span><span>Button icon is still the cart icon; visually identical to normal Add to Cart. UX improvement listed below.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">02 · PDP normal</span><img src="/review-assets/02-normal-pdp.jpeg" alt="Normal PDP" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Untouched</span>
+        <h3>Regular product page</h3>
+        <p class="rv-url">/products/b-w-px7-s2-headphones</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span><b>Price visible:</b> R 4,999.00 ZAR, strike-through R 5,999.00 (sale).</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>Normal</b> Add to Cart button — no interference.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>App recognises this product is <em>not</em> quote-only and leaves it alone.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">03 · Cart (quote-only)</span><img src="/review-assets/03-cart-quote-only.jpeg" alt="Cart with only quote-only items" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Quote required + checkout hidden</span>
+        <h3>Cart with only quote-only items</h3>
+        <p class="rv-url">/cart</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span><b>"Quote required"</b> section injected above native cart with cream-amber frame.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>Thumbnail + variant + qty</b> listed per quote-only item.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>"Request Quote"</b> primary-style button links to /pages/request-quote.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>Native Checkout button is hidden</b> — quote-only items cannot be purchased directly.</span></li>
+          <li><span class="rv-tag tag-warn">!</span><span><b>MAP leak:</b> the native cart line below the section still shows R 299,990.00 + Estimated total. Stop-ship fix listed.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">04 · Cart (mixed)</span><img src="/review-assets/04-cart-mixed.jpeg" alt="Cart with mixed items" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Two independent paths</span>
+        <h3>Cart with both quote-only and regular items</h3>
+        <p class="rv-url">/cart · 2 items</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span><b>Quote required section</b> lists only the B+W 805 D4 (quote-only subset).</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>"Check out" button visible</b> — on click, the app first removes quote-only lines, then goes to /checkout with only the headphones.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span><b>"Request Quote"</b> submits a quote on only the quote-only subset, leaving sellable items in the cart.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Two independent paths — exactly the UX you specified.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">05 · Request quote form</span><img src="/review-assets/05-request-form.jpeg" alt="Request quote form" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Renders with summary</span>
+        <h3>Request-quote page</h3>
+        <p class="rv-url">/pages/request-quote</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span><b>"Items in your quote"</b> sidebar filters to only the quote-only subset of the cart.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Form fields: name*, email*, phone, project address, timeline, budget range, project details, floor plan upload (10 MB max), hidden honeypot.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Fields match the home-automation dealer use case: project address + timeline + floor plan.</span></li>
+          <li><span class="rv-tag tag-warn">!</span><span>Visual design is functional but plain — a dark theme to match the brand would lift it.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">06 · Filled</span><img src="/review-assets/06-form-filled.jpeg" alt="Form filled" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ All fields accept input</span>
+        <h3>Form filled with test data</h3>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span>Name: Ada Lovelace</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Email: ada@example.com</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Phone: +27 21 555 0100</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Project address: 123 Analytical Engine Rd, Cape Town</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Timeline: Next 3 months</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Details: "Whole-home audio + lighting. Main living area 40m2."</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">07 · Submit success</span><img src="/review-assets/07-submit-success.jpeg" alt="Submit success" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ End-to-end submit works</span>
+        <h3>After submission</h3>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span><b>Inline success:</b> "Thanks — we'll be in touch. Continue shopping or return to your cart."</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Request travelled through the App Proxy → HMAC verified → payload validated.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Customer created (Ada Lovelace) + Draft Order created + quote-only cart lines removed.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot" style="background: var(--panel2); padding: 24px; display: flex; align-items: center; justify-content: center;">
+        <div class="rv-draft-card" style="width: 100%; margin: 0;">
+          <div class="rv-draft-head"><h4>Draft order #D3</h4><span class="pill">Open</span></div>
+          <div class="rv-draft-body">
+            <div class="rv-draft-row"><div class="k">Customer</div><div class="v">Ada Lovelace &lt;ada@example.com&gt;</div></div>
+            <div class="rv-draft-row"><div class="k">Tags</div><div class="v">quote-request</div></div>
+            <div class="rv-draft-row"><div class="k">Line items</div><div class="v">B+W 805 D4 Signature Bookshelf · Blue · qty 1</div></div>
+            <div class="rv-draft-row"><div class="k">Total (base)</div><div class="v">R 344,988.50</div></div>
+            <div class="rv-draft-row"><div class="k">source</div><div class="v">quote-request</div></div>
+            <div class="rv-draft-row"><div class="k">phone</div><div class="v">+27 21 555 0100</div></div>
+            <div class="rv-draft-row"><div class="k">project_address</div><div class="v">123 Analytical Engine Rd, Cape Town</div></div>
+            <div class="rv-draft-row"><div class="k">timeline</div><div class="v">Next 3 months</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Confirmed via Admin API</span>
+        <h3>Draft order in Shopify Admin</h3>
+        <p class="rv-url">Admin → Orders → Drafts · tag:quote-request</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span>Draft <code>#D3</code> visible in native Drafts filter by tag <code>quote-request</code>.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Only the quote-only subset of the cart made it into the draft — headphones did not.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>All project metadata preserved as custom attributes on the draft.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Merchant next: edit line prices, add service line items ("Installation — 8hr @ $150"), click <b>Send invoice</b>.</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot"><span class="rv-step-caption">10 · Cart after submit</span><img src="/review-assets/10-post-submit-cart.jpeg" alt="Cart after submit" loading="lazy"></div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ Clean split</span>
+        <h3>Cart after quote submission</h3>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span>B+W 805 D4 (quote-only) is <b>removed</b> from the cart.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>B+W PX7 headphones remain — sellable items are not affected.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>"Check out" button back — customer can now complete checkout on the remaining purchasable items.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Total correctly recalculated: R 4,999.00 ZAR (just the headphones).</span></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="rv-step">
+      <div class="rv-step-shot" style="background: var(--panel2); padding: 32px; display: flex; flex-direction: column; gap: 14px;">
+        <div style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--muted);">POST /api/admin/settings</div>
+        <div style="background: #000; padding: 16px; border-radius: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; line-height: 1.6; color: var(--good);">← Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…<br>→ 200 OK { "ok": true }<br><span style="color: var(--muted);"># verified via <code style="color: var(--text);">lib/sessionToken.ts</code> — HS256, exp/nbf/aud/iss/dest checks</span></div>
+        <div style="color: var(--muted); font-size: 13px;">Direct visits to /admin SSR-redirect to <code>admin.shopify.com/store/smart-spaces-za/apps/smartspaces-quote</code>. Session tokens are 1-minute lived and fetched from App Bridge before each fetch.</div>
+      </div>
+      <div class="rv-step-copy">
+        <span class="rv-verdict good">✓ App Bridge + JWT verified</span>
+        <h3>Embedded admin — session-token-gated</h3>
+        <p class="rv-url">admin.shopify.com/store/smart-spaces-za/apps/smartspaces-quote</p>
+        <ul class="rv-annot-list">
+          <li><span class="rv-tag tag-good">✓</span><span>Loads only inside Shopify admin iframe via App Bridge CDN.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Every settings read/write verifies a fresh JWT server-side — no public access path.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Saves persist to shop metafield <code>quote.settings</code> — storefront reads live via App Proxy.</span></li>
+          <li><span class="rv-tag tag-good">✓</span><span>Controls: quote-only tag name, Add-to-Quote CTA, Request Quote CTA, hide-price-on-PDP, hide-price-on-collection.</span></li>
+        </ul>
+      </div>
+    </article>
+
+  </section>
+
+  <section id="review" class="rv-section">
+    <h2>UX / UI critical review</h2>
+    <p class="rv-section-intro">Prioritised punch list. Use the filters to slice by severity.</p>
+    <div class="rv-filter">
+      <button data-sev="all" class="active">All</button>
+      <button data-sev="stop">Stop-ship</button>
+      <button data-sev="high">High</button>
+      <button data-sev="med">Medium</button>
+      <button data-sev="low">Low</button>
+      <button data-sev="a11y">A11y</button>
+    </div>
+
+    <div class="rv-issue" data-sev="stop"><div class="rv-issue-head"><div class="sev sev-stop">Stop</div><div class="rv-issue-title">1. Cart line still shows price on quote-only items</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Native cart row for a quote-only product still renders R 299,990.00 and contributes to the Estimated Total. This leaks MAP-protected pricing. <b>Fix:</b> per-line CSS hide via <code>[data-qr-line-id]</code> data attribute emitted by our JS after /cart.js hydration. Add a "Quote required" pill on the line instead.</div></div>
+
+    <div class="rv-issue" data-sev="stop"><div class="rv-issue-head"><div class="sev sev-stop">Stop</div><div class="rv-issue-title">2. /cart/&lt;variant&gt;:1?replace permalink bypass</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Shopify's permalink adds to cart and force-redirects to /checkout, bypassing our cart intercept entirely. A quote-only variant entered this way can reach checkout at price. <b>Fix:</b> ship a Shopify Function (checkout.cart.validation.v1) that blocks any variant carrying the quote-only tag. Storefront JS alone can't close this.</div></div>
+
+    <div class="rv-issue" data-sev="stop"><div class="rv-issue-head"><div class="sev sev-stop">Stop</div><div class="rv-issue-title">3. Dev-store password still on; no bot challenge on submit</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">For real launch: disable storefront password. Add BotID or hCaptcha on <code>/apps/quote/submit</code> — honeypot + HMAC is enough for a known dev store but not for a public storefront.</div></div>
+
+    <div class="rv-issue" data-sev="high"><div class="rv-issue-head"><div class="sev sev-high">High</div><div class="rv-issue-title">4. "Add to Quote" button visually identical to Add to Cart</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Same pill shape, same cart icon, same height. The semantic shift isn't felt. Swap the cart icon for a document icon (Heroicons <code>document-text</code>) or remove the icon on quote-only products. Consider a subtle outline variant.</div></div>
+
+    <div class="rv-issue" data-sev="high"><div class="rv-issue-head"><div class="sev sev-high">High</div><div class="rv-issue-title">5. No "Price on request" copy on quote-only PDPs</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Right now the PDP just shows an empty gap where the price was. Luxury / MAP-restricted gear expects "Price on request" or "Contact for pricing" copy in that slot — it clarifies the flow, builds trust, and prevents the "is this broken?" reaction.</div></div>
+
+    <div class="rv-issue" data-sev="high"><div class="rv-issue-head"><div class="sev sev-high">High</div><div class="rv-issue-title">6. Submit is one click — no confirmation step</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">For a quote that the merchant will act on during business hours, a "Send request to &lt;store&gt;?" confirmation or inline review step would reduce accidental submits and double-submits. Low effort, high trust payoff.</div></div>
+
+    <div class="rv-issue" data-sev="high"><div class="rv-issue-head"><div class="sev sev-high">High</div><div class="rv-issue-title">7. File upload has no size/progress feedback</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">The 10 MB limit is enforced server-side; in the UI it's silent. Add a progress indicator, show selected filename, show size with green/red threshold based on the 10 MB cap.</div></div>
+
+    <div class="rv-issue" data-sev="med"><div class="rv-issue-head"><div class="sev sev-med">Med</div><div class="rv-issue-title">8. Request-quote page is visually plain</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">A dark theme to match the rest of the site, a subtle hero image of a home automation install, and a brand-consistent H1 treatment would lift perceived quality. Functional today; not yet luxurious.</div></div>
+
+    <div class="rv-issue" data-sev="med"><div class="rv-issue-head"><div class="sev sev-med">Med</div><div class="rv-issue-title">9. Admin settings page uses plain HTML (no Polaris)</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Intentional — Polaris 13 has a React 19 peer-dep conflict. The page sticks out inside Shopify admin. A thin layer of Polaris-like spacing/typography (fonts, paddings, border radii) would make it feel native. Acceptable for v1; revisit when Polaris v14 ships with React 19 support.</div></div>
+
+    <div class="rv-issue" data-sev="med"><div class="rv-issue-head"><div class="sev sev-med">Med</div><div class="rv-issue-title">10. Mixed-cart: both CTAs are visually identical primary buttons</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">In mixed mode the native "Check out" and our "Request Quote" both render as primary black pills. Suggest: quote CTA takes the cream-amber accent of the "Quote required" frame; native Checkout stays brand-primary. Easier for the eye to separate.</div></div>
+
+    <div class="rv-issue" data-sev="med"><div class="rv-issue-head"><div class="sev sev-med">Med</div><div class="rv-issue-title">11. No empty-state CTA on /pages/request-quote</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">If the customer lands on the form with nothing in the cart, we show "Your quote is empty — browse the shop to add items." Add a "Browse collections" button directly there.</div></div>
+
+    <div class="rv-issue" data-sev="low"><div class="rv-issue-head"><div class="sev sev-low">Low</div><div class="rv-issue-title">12. Shopify Flow email workflows not installed</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Set up the two workflows described in <code>flows/README.md</code> before launch. Without them customers get no confirmation email and the merchant has no notification except "new draft" in admin.</div></div>
+
+    <div class="rv-issue" data-sev="low"><div class="rv-issue-head"><div class="sev sev-low">Low</div><div class="rv-issue-title">13. storefront.js loads on every storefront page (~16KB)</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Fine as-is but the script could short-circuit sooner when no work applies (About Us, blog pages, etc.) to save a tiny amount of main-thread time.</div></div>
+
+    <div class="rv-issue" data-sev="low"><div class="rv-issue-head"><div class="sev sev-low">Low</div><div class="rv-issue-title">14. Submit errors show raw backend codes</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">e.g. <code>validation_failed</code> bubbles up to the user. Translate to human copy in <code>storefront.js</code>.</div></div>
+
+    <div class="rv-issue" data-sev="a11y"><div class="rv-issue-head"><div class="sev sev-a11y">A11y</div><div class="rv-issue-title">15. Relabel doesn't update aria-label on the button</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Button text reads "Add to Quote" visually but screen readers may still announce "Add to cart" if the theme set <code>aria-label="Add to cart"</code>. Update aria-label in the relabel loop to match.</div></div>
+
+    <div class="rv-issue" data-sev="a11y"><div class="rv-issue-head"><div class="sev sev-a11y">A11y</div><div class="rv-issue-title">16. Form labels wrap inputs instead of using for/id</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Accessible today via wrapping, but explicit <code>&lt;label for=&quot;…&quot;&gt;</code> + <code>&lt;input id=&quot;…&quot;&gt;</code> is more robust across assistive tech and theme-level label overrides.</div></div>
+
+    <div class="rv-issue" data-sev="a11y"><div class="rv-issue-head"><div class="sev sev-a11y">A11y</div><div class="rv-issue-title">17. Honeypot — belt and suspenders</div><div class="rv-issue-toggle">+</div></div><div class="rv-issue-body">Already <code>aria-hidden="true"</code> + <code>tabindex="-1"</code>. Add <code>autocomplete="off"</code> + <code>role="presentation"</code> to ensure assistive tech fully skips it.</div></div>
+  </section>
+
+  <section id="artifacts" class="rv-section">
+    <h2>Artifacts</h2>
+    <p class="rv-section-intro">All source, state, and proof in one place.</p>
+    <div class="rv-kv">
+      <div class="rv-kv-item"><div class="k">Source</div><div class="v"><a class="rv-link" href="https://github.com/astralfragment/smartspaces-quote" target="_blank">github.com/astralfragment/smartspaces-quote</a></div></div>
+      <div class="rv-kv-item"><div class="k">Production</div><div class="v"><a class="rv-link" href="https://smartspaces-quote.vercel.app" target="_blank">smartspaces-quote.vercel.app</a></div></div>
+      <div class="rv-kv-item"><div class="k">Embedded admin</div><div class="v"><a class="rv-link" href="https://admin.shopify.com/store/smart-spaces-za/apps/smartspaces-quote" target="_blank">Apps → SmartSpaces Quote</a></div></div>
+      <div class="rv-kv-item"><div class="k">Dev store</div><div class="v"><a class="rv-link" href="https://smart-spaces-za.myshopify.com" target="_blank">smart-spaces-za.myshopify.com</a> (pw: gohbri)</div></div>
+      <div class="rv-kv-item"><div class="k">Partners app</div><div class="v">213074664 / app 349507452929 / v6</div></div>
+      <div class="rv-kv-item"><div class="k">Active config</div><div class="v">shopify.app.smartspaces-quote.toml</div></div>
+    </div>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var root = document.currentScript.closest(".rv-root") || document;
+  // Nav smooth-scroll + active state
+  root.querySelectorAll(".rv-nav button[data-goto]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-goto");
+      var el = root.querySelector("#" + id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      root.querySelectorAll(".rv-nav button").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+    });
+  });
+
+  // Issue collapse
+  root.querySelectorAll(".rv-issue-head").forEach(function (head) {
+    head.addEventListener("click", function () {
+      var body = head.nextElementSibling;
+      var toggle = head.querySelector(".rv-issue-toggle");
+      if (body && body.classList.toggle("open")) {
+        if (toggle) toggle.textContent = "−";
+      } else if (toggle) {
+        toggle.textContent = "+";
+      }
+    });
+  });
+
+  // Severity filter
+  root.querySelectorAll(".rv-filter button[data-sev]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      root.querySelectorAll(".rv-filter button").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      var sev = btn.getAttribute("data-sev");
+      root.querySelectorAll(".rv-issue").forEach(function (i) {
+        if (sev === "all" || i.getAttribute("data-sev") === sev) i.classList.remove("rv-hidden");
+        else i.classList.add("rv-hidden");
+      });
+    });
+  });
+})();
+</script>

@@ -1,0 +1,21 @@
+{
+  "draft": {
+    "id": "1283591766261",
+    "name": "#D3",
+    "email": "ada@example.com",
+    "tags": ["quote-request"],
+    "total": "344988.50",
+    "currency": "ZAR",
+    "status": "open",
+    "line_items": [
+      { "title": "B+W 805 D4 Signature Bookshelf", "variant": "Blue", "qty": 1 }
+    ],
+    "note_attributes": [
+      { "key": "source", "value": "quote-request" },
+      { "key": "phone", "value": "+27 21 555 0100" },
+      { "key": "project_address", "value": "123 Analytical Engine Rd, Cape Town" },
+      { "key": "timeline", "value": "Next 3 months" }
+    ],
+    "customer": { "name": "Ada Lovelace", "email": "ada@example.com" }
+  }
+}
