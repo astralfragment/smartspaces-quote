@@ -100,7 +100,7 @@ export function buildDraftOrderInput(
     customAttributes.push({ key: "install_required", value: "Yes" });
   if (submission.existing_system)
     customAttributes.push({ key: "existing_system", value: submission.existing_system });
-  submission.rooms?.forEach((r, i) => {
+  submission.rooms.forEach((r, i) => {
     customAttributes.push({
       key: `room_${i + 1}`,
       value: r.notes ? `${r.name} — ${r.notes}` : r.name,
