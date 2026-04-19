@@ -1,0 +1,256 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#MainContent"
+  - banner [ref=e4]:
+    - generic [ref=e8]:
+      - navigation "Primary" [ref=e12]:
+        - list [ref=e14]:
+          - generic:
+            - link "HOME" [ref=e15] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e16]: HOME
+            - link "CATALOG" [ref=e17] [cursor=pointer]:
+              - /url: /collections/all
+              - generic [ref=e18]: CATALOG
+            - link "PROJECTS" [ref=e19] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e20]: PROJECTS
+            - link "SERVICES" [ref=e21] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e22]: SERVICES
+          - listitem [ref=e24] [cursor=pointer]:
+            - generic [ref=e25]: More
+      - link [ref=e27] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e29]:
+        - button "Search" [ref=e31] [cursor=pointer]:
+          - generic:
+            - img
+        - generic [ref=e32]:
+          - button "Account" [ref=e37] [cursor=pointer]:
+            - img [ref=e39]
+          - button "Cart" [ref=e42] [cursor=pointer]:
+            - generic [ref=e43]:
+              - generic:
+                - img
+              - generic [ref=e44]:
+                - status:
+                  - generic [ref=e46]: "Total items in cart: 0"
+  - main [ref=e47]:
+    - generic [ref=e48]:
+      - region "Quick add to cart bar" [ref=e49]:
+        - img "B+W PX7 S2 Headphones" [ref=e51]
+        - generic [ref=e52]:
+          - heading "B+W PX7 S2 Headphones" [level=3] [ref=e53]
+          - generic [ref=e54]: Black
+        - generic [ref=e56]:
+          - group [ref=e57]:
+            - generic [ref=e58]: Sale price
+            - text: R 4,999.00 ZAR
+          - group [ref=e59]:
+            - generic [ref=e60]: Regular price
+            - text: R 5,999.00 ZAR
+        - button "Add to cart" [ref=e61] [cursor=pointer]:
+          - generic [ref=e62]:
+            - generic:
+              - img
+            - generic [ref=e63]: Add to cart
+          - generic [ref=e64]:
+            - generic:
+              - img
+      - generic [ref=e66]:
+        - link "Skip to product information" [ref=e67] [cursor=pointer]:
+          - /url: "#ProductInformation-template--21324584452341__main"
+        - generic [ref=e68]:
+          - img "B+W PX7 S2 Headphones" [ref=e76]
+          - generic [ref=e79]:
+            - generic [ref=e81]:
+              - heading "B+W PX7 S2 Headphones" [level=1] [ref=e83]
+              - generic [ref=e85]:
+                - group [ref=e86]:
+                  - generic [ref=e87]: Sale price
+                  - text: R 4,999.00 ZAR
+                - group [ref=e88]:
+                  - generic [ref=e89]: Regular price
+                  - text: R 5,999.00 ZAR
+            - generic [ref=e94]: ColorBlack
+            - generic [ref=e96]:
+              - status [ref=e97]
+              - generic [ref=e99]:
+                - generic [ref=e101]:
+                  - button "Decrease quantity" [disabled] [ref=e102] [cursor=pointer]:
+                    - generic [ref=e103]: Decrease quantity
+                    - generic:
+                      - img
+                  - spinbutton "Quantity" [ref=e104]: "1"
+                  - button "Increase quantity" [ref=e105] [cursor=pointer]:
+                    - generic [ref=e106]: Increase quantity
+                    - generic:
+                      - img
+                - button "Add to cart" [ref=e109] [cursor=pointer]:
+                  - generic [ref=e110]:
+                    - generic:
+                      - img
+                    - generic [ref=e112]: Add to cart
+                  - generic [ref=e113]:
+                    - generic:
+                      - img
+            - generic [ref=e114]:
+              - paragraph [ref=e115]: Px7 S2
+              - paragraph [ref=e116]:
+                - strong [ref=e117]: Over-ear noise canceling headphones
+              - paragraph [ref=e118]: Px7 S2's custom-designed 40mm drive units and 24-bit-capable wireless platform combine for a truly immersive listening experience that allows you to hear more of what the artist wants you to hear.
+              - paragraph [ref=e119]:
+                - img [ref=e120]
+              - paragraph [ref=e121]
+              - paragraph [ref=e122]:
+                - strong [ref=e123]: Hear what your music really sounds like
+              - list [ref=e124]:
+                - listitem [ref=e125]: Bowers & Wilkins is trusted by music professionals the world over to deliver the most detailed, natural and immersive sound available. Our Px7 S2 headphones bring you closer to the original recording, so you’ll hear the music exactly as the artist intended. With 30 hours of listening from a single charge, you can enjoy the experience for over a day at a time.
+              - paragraph [ref=e126]:
+                - strong [ref=e127]: Sounds like no other
+              - list [ref=e128]:
+                - listitem [ref=e129]: Px7 S2 uses custom-designed 40mm drive units, carefully angled inside each earcup for a truly focused, immersive listening experience. The result is a class-leading headphone experience.
+              - figure [ref=e130]:
+                - img [ref=e131]
+              - figure [ref=e132]:
+                - img [ref=e133]
+              - paragraph [ref=e134]:
+                - strong [ref=e135]: Cancel the noise, not your music
+              - list [ref=e136]:
+                - listitem [ref=e137]: Px7 S2 uses a total of six microphones for outstanding noise cancellation that shuts out unwanted intrusions without harming your favorite music dynamics and energy. Careful positioning and angling of those microphones ensures excellent call quality too, even in noisy environments.
+              - paragraph [ref=e138]:
+                - strong [ref=e139]: Premium design, perfect fit
+              - list [ref=e140]:
+                - listitem [ref=e141]: Px7 S2 has been carefully designed for comfortable, extended listening, with luxurious memory foam earpads that perfectly encapsulate and cushion your ears, and an elegant fabric finish.
+              - figure [ref=e142]:
+                - img [ref=e143]
+            - generic [ref=e144]:
+              - group [ref=e146]:
+                - generic "Technical Details" [ref=e147] [cursor=pointer]:
+                  - text: Technical Details
+                  - generic:
+                    - img
+                - list [ref=e151]:
+                  - listitem [ref=e152]:
+                    - strong [ref=e153]: Drive units
+                    - text: 2 x 40mm dynamic full range bio cellulose driver
+                  - listitem [ref=e154]:
+                    - strong [ref=e155]: Technical features
+                    - text: Hybrid Noise Cancellation
+                    - text: Ambient Pass-Through
+                    - text: Wear-Detection Sensor
+                    - text: Bluetooth® audio - Bluetooth 5.2 with aptX™
+                    - text: Adaptive USB-C charging & audio interface
+                  - listitem [ref=e156]:
+                    - strong [ref=e157]: Wearing style
+                    - text: Bluetooth Wireless Over-Ear Headphones
+                  - listitem [ref=e158]:
+                    - strong [ref=e159]: Bluetooth codecs
+                    - text: aptX™
+                    - text: Adaptive aptX™ HD
+                    - text: aptX™
+                    - text: AAC
+                    - text: SBC
+                  - listitem [ref=e160]:
+                    - strong [ref=e161]: Bluetooth profiles
+                    - text: A2DP
+                    - text: AVRCP
+                    - text: HFP
+                    - text: HSP
+                    - text: BLE GATT (Generic Attribute Profile)
+                  - listitem [ref=e162]:
+                    - strong [ref=e163]: Microphones
+                    - text: 4x mics for ANC
+                    - text: 2x mics for telephony
+                  - listitem [ref=e164]:
+                    - strong [ref=e165]: Distortion
+                    - text: (THD)<0.1 % (1 kHz/10mW)
+                  - listitem [ref=e166]:
+                    - strong [ref=e167]: Battery type
+                    - text: Rechargeable Lithium Ion
+                  - listitem [ref=e168]:
+                    - strong [ref=e169]: Battery life & charging
+                    - text: 30 hours playback, 7 hour with 15min charge
+                  - listitem [ref=e170]:
+                    - strong [ref=e171]: In box accessories
+                    - text: 1.2m USB-C to 3.5mm stereo jack audio cable
+                    - text: 1.2m USB-C to USB-C cable
+                    - text: Carry Case
+              - group [ref=e173]:
+                - generic "Audio Test Graph" [ref=e174] [cursor=pointer]:
+                  - text: Audio Test Graph
+                  - generic:
+                    - img
+    - generic [ref=e180]:
+      - img [ref=e181]
+      - generic [ref=e225]:
+        - generic [ref=e226]: Play video
+        - img [ref=e227]
+    - generic [ref=e232]:
+      - heading "You may also like" [level=3] [ref=e235]
+      - generic [ref=e236]:
+        - generic "Loading product recommendations" [ref=e237]
+        - generic "Loading product recommendations" [ref=e238]
+        - generic "Loading product recommendations" [ref=e239]
+        - generic "Loading product recommendations" [ref=e240]
+    - generic [ref=e245]:
+      - heading "Get in touch" [level=3] [ref=e247]
+      - generic [ref=e249]:
+        - generic [ref=e250]:
+          - generic [ref=e251]: Name
+          - textbox "Name" [ref=e252]
+          - generic [ref=e253]: Email*
+          - textbox "Email" [ref=e254]
+        - generic [ref=e255]: Phone
+        - textbox "Phone" [ref=e256]
+        - generic [ref=e257]: Comment
+        - textbox "Comment" [ref=e258]
+        - button "Submit" [ref=e259] [cursor=pointer]
+  - contentinfo [ref=e260]:
+    - generic [ref=e264]:
+      - paragraph [ref=e266]:
+        - strong [ref=e267]: Office
+        - text: +27 21 510 0891
+        - strong [ref=e268]: Email
+        - text: info@smartspaces.co.za
+        - strong [ref=e269]: Office & Showroom
+        - text: Unit 1, 7 Gold Street, Northgate Business Park, Brooklyn, Cape Town, 7405
+        - emphasis [ref=e270]: (Opposite The Toy Shop & The Building Centre)
+      - group [ref=e272]:
+        - navigation "Main menu" [ref=e273]:
+          - list [ref=e274]:
+            - listitem [ref=e275]:
+              - link "HOME" [ref=e276] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e277]:
+              - link "CATALOG" [ref=e278] [cursor=pointer]:
+                - /url: /collections/all
+            - listitem [ref=e279]:
+              - link "PROJECTS" [ref=e280] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e281]:
+              - link "SERVICES" [ref=e282] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e283]:
+              - link "ABOUT US" [ref=e284] [cursor=pointer]:
+                - /url: /pages/about-us
+            - listitem [ref=e285]:
+              - link "CONTACTS" [ref=e286] [cursor=pointer]:
+                - /url: /pages/contact
+      - generic [ref=e287]:
+        - generic [ref=e288]: Sign up for our free mailing list to get updates on new deals, new releases, and discounts
+        - generic [ref=e290]:
+          - generic [ref=e291]: Email
+          - textbox "Email" [ref=e292]:
+            - /placeholder: Email address
+          - button "Sign up" [ref=e293] [cursor=pointer]
+    - generic [ref=e297]:
+      - generic [ref=e299]:
+        - text: © 2026
+        - link "Smart Spaces ZA" [ref=e300] [cursor=pointer]:
+          - /url: /
+        - text: ","
+        - link "Powered by Shopify" [ref=e301] [cursor=pointer]:
+          - /url: https://www.shopify.com?utm_campaign=poweredby&utm_medium=shopify&utm_source=onlinestore
+      - button "Terms and Policies" [ref=e303] [cursor=pointer]
