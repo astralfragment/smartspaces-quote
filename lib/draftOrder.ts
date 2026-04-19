@@ -94,6 +94,18 @@ export function buildDraftOrderInput(
   if (submission.project_address) customAttributes.push({ key: "project_address", value: submission.project_address });
   if (submission.timeline) customAttributes.push({ key: "timeline", value: submission.timeline });
   if (submission.budget_range) customAttributes.push({ key: "budget_range", value: submission.budget_range });
+  if (submission.preferred_contact)
+    customAttributes.push({ key: "preferred_contact", value: submission.preferred_contact });
+  if (submission.install_required)
+    customAttributes.push({ key: "install_required", value: "Yes" });
+  if (submission.existing_system)
+    customAttributes.push({ key: "existing_system", value: submission.existing_system });
+  submission.rooms?.forEach((r, i) => {
+    customAttributes.push({
+      key: `room_${i + 1}`,
+      value: r.notes ? `${r.name} — ${r.notes}` : r.name,
+    });
+  });
   if (floorPlanFileId) customAttributes.push({ key: "floor_plan_file_id", value: floorPlanFileId });
 
   return {
