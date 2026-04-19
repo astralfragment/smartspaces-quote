@@ -218,7 +218,10 @@
     }
   }
 
+  var cartRendered = false;
   function runCart(settings) {
+    if (cartRendered) return;
+    cartRendered = true;
     getCart().then(function (cart) {
       return loadItemTags(cart.items || []).then(function (hydrated) {
         cart.items = hydrated;
