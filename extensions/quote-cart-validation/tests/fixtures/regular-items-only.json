@@ -1,0 +1,45 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "cart": {
+        "lines": [
+          {
+            "quantity": 1,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/1",
+                "title": "HDMI Cable",
+                "hasTags": [{ "tag": "quote-only", "hasTag": false }],
+                "metafield": null
+              }
+            }
+          },
+          {
+            "quantity": 2,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/2",
+                "title": "Wall Plate",
+                "hasTags": [{ "tag": "quote-only", "hasTag": false }],
+                "metafield": { "value": "false" }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": []
+          }
+        }
+      ]
+    }
+  }
+}

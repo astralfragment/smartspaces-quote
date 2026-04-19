@@ -1,0 +1,17 @@
+api_version = "2026-01"
+
+[[extensions]]
+name = "t:name"
+handle = "quote-cart-validation"
+type = "function"
+uid = "7b90f4c4-78a6-3231-7e94-7df47fffbc02a74138da"
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "cart.validations.generate.run"
+  input_query = "src/cart_validations_generate_run.graphql"
+  export = "cart-validations-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"

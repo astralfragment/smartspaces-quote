@@ -1,0 +1,66 @@
+{
+  "payload": {
+    "export": "cart-validations-generate-run",
+    "target": "cart.validations.generate.run",
+    "input": {
+      "cart": {
+        "lines": [
+          {
+            "quantity": 1,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/20",
+                "title": "HDMI Cable",
+                "hasTags": [{ "tag": "quote-only", "hasTag": false }],
+                "metafield": null
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/21",
+                "title": "Crestron Processor",
+                "hasTags": [{ "tag": "quote-only", "hasTag": true }],
+                "metafield": null
+              }
+            }
+          },
+          {
+            "quantity": 1,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "product": {
+                "id": "gid://shopify/Product/22",
+                "title": "Crestron Touch Panel",
+                "hasTags": [{ "tag": "quote-only", "hasTag": false }],
+                "metafield": { "value": "1" }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": [
+        {
+          "validationAdd": {
+            "errors": [
+              {
+                "message": "\"Crestron Processor\" requires a quote — please complete the quote request instead.",
+                "target": "$.cart"
+              },
+              {
+                "message": "\"Crestron Touch Panel\" requires a quote — please complete the quote request instead.",
+                "target": "$.cart"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
