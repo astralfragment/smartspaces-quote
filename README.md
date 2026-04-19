@@ -23,7 +23,7 @@ Next.js server (Vercel)
  ├─ /api/proxy/cart     → logged-in customer quote-cart sync via customer metafield
  ├─ /api/auth/*         → OAuth install/callback; defines metafields on install
  ├─ /api/webhooks/…     → app/uninstalled
- └─ /(admin)            → single settings page (bulk toggle quote-only, form config)
+ └─ /admin              → single settings page (bulk toggle quote-only, form config)
 
 Shopify Flow (free) — triggered by Draft order created + tag "quote-request"
  ├─ Email the merchant
@@ -46,7 +46,7 @@ Shopify Flow (free) — triggered by Draft order created + tag "quote-request"
 
 ```
 app/
-  (admin)/             # Single settings page (server actions + client form)
+  admin/               # Single settings page (server actions + client form)
   api/
     auth/[...shopify]/ # OAuth install + callback; creates metafield definitions
     proxy/submit/      # App Proxy POST: HMAC-verified quote submission

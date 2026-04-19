@@ -16,7 +16,7 @@ See `README.md` for architecture, setup, and end-to-end test. See `docs/` or `pl
 
 1. **Do not add app-local persistence.** No Prisma, no Redis, no SQLite, no Neon, no Vercel KV. All state lives in Shopify (metafields, metaobjects, draft order tags + custom attributes) plus `SHOPIFY_OFFLINE_TOKEN` as a Vercel env var for the single-store custom install. If a feature seems to need a DB, push back and reconsider.
 2. **Do not add paid SaaS.** No Resend, no Upstash, no Vercel Blob, no Vercel BotID, no Sentry, etc. Free-tier primitives only. Shopify Flow handles email; Shopify Files handles uploads; HMAC + honeypot handles spam.
-3. **Do not add a custom admin quote builder.** Shopify's native Drafts admin page is the builder. The only admin UI in this app is the settings page at `app/(admin)/page.tsx` — single page, plain HTML, no Polaris, no App Bridge.
+3. **Do not add a custom admin quote builder.** Shopify's native Drafts admin page is the builder. The only admin UI in this app is the settings page at `app/admin/page.tsx` — single page, plain HTML, no Polaris, no App Bridge.
 4. **Do not install Polaris or App Bridge.** They pull peer-dep conflicts with React 19 and are not needed. The settings page uses plain styled divs.
 5. **Do not invent new metaobjects.** The quote *is* a Draft Order. Don't mirror it to a metaobject.
 6. **Do not change the storefront tech.** The storefront is a Liquid theme app extension (blocks + vanilla JS). No React in the extension.
@@ -91,7 +91,7 @@ End-to-end testing requires the dev store — follow the E2E steps in the README
 |---|---|
 | `lib/*.ts` | `shopify.app.smartspaces-quote.toml` (CLI-managed) |
 | `app/api/*` | `extensions/quote-storefront/shopify.extension.toml` (CLI-managed `uid`) |
-| `app/(admin)/*` | `.vercel/project.json` (Vercel-managed) |
+| `app/admin/*` | `.vercel/project.json` (Vercel-managed) |
 | `extensions/quote-storefront/blocks/*.liquid` | `next.config.ts` unless security headers change |
 | `extensions/quote-storefront/assets/*` | |
 

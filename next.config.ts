@@ -6,7 +6,7 @@ const config: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(admin)/:path*",
+        source: "/admin/:path*",
         headers: [
           { key: "Content-Security-Policy", value: "frame-ancestors https://*.myshopify.com https://admin.shopify.com" },
         ],
