@@ -100,7 +100,7 @@ async function handleCallback(url: URL) {
 }
 
 async function ensureMetafieldDefinitions(shop: string, token: string) {
-  const query = /* GraphQL */ `
+  const createMutation = /* GraphQL */ `
     mutation Define($def: MetafieldDefinitionInput!) {
       metafieldDefinitionCreate(definition: $def) {
         createdDefinition { id }
@@ -108,25 +108,42 @@ async function ensureMetafieldDefinitions(shop: string, token: string) {
       }
     }
   `;
+  const updateMutation = /* GraphQL */ `
+    mutation Update($def: MetafieldDefinitionUpdateInput!) {
+      metafieldDefinitionUpdate(definition: $def) {
+        updatedDefinition { id }
+        userErrors { field message code }
+      }
+    }
+  `;
   const defs = [
     {
-      name: "Quote only",
-      description: "Hide price + buy button on the storefront; show Request Quote instead.",
-      namespace: "quote",
-      key: "quote_only",
-      type: "boolean",
-      ownerType: "PRODUCT",
-      pin: true,
-      access: { admin: "MERCHANT_READ_WRITE", storefront: "PUBLIC_READ" },
+      create: {
+        name: "Quote only",
+        description: "Hide price + buy button on the storefront; show Request Quote instead.",
+        namespace: "quote",
+        key: "quote_only",
+        type: "boolean",
+        ownerType: "PRODUCT",
+        pin: true,
+      },
+      update: {
+        namespace: "quote",
+        key: "quote_only",
+        ownerType: "PRODUCT",
+        access: { storefront: "PUBLIC_READ" },
+      },
     },
     {
-      name: "Quote cart",
-      description: "Persisted quote cart for logged-in customers (managed by the app).",
-      namespace: "quote",
-      key: "cart",
-      type: "json",
-      ownerType: "CUSTOMER",
-      access: { admin: "MERCHANT_READ" },
+      create: {
+        name: "Quote cart",
+        description: "Persisted quote cart for logged-in customers (managed by the app).",
+        namespace: "quote",
+        key: "cart",
+        type: "json",
+        ownerType: "CUSTOMER",
+      },
+      update: null,
     },
   ];
   const url = `https://${shop}/admin/api/${API_VERSION}/graphql.json`;
@@ -134,7 +151,14 @@ async function ensureMetafieldDefinitions(shop: string, token: string) {
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": token },
-      body: JSON.stringify({ query, variables: { def } }),
+      body: JSON.stringify({ query: createMutation, variables: { def: def.create } }),
     });
+    if (def.update) {
+      await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": token },
+        body: JSON.stringify({ query: updateMutation, variables: { def: def.update } }),
+      });
+    }
   }
 }
