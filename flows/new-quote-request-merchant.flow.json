@@ -1,0 +1,16 @@
+{
+  "_note": "Reference template. Import in Shopify Flow (Workflows → Import) or recreate manually using flows/README.md.",
+  "name": "New quote request → notify merchant",
+  "trigger": { "type": "draft_orders/create" },
+  "conditions": [
+    { "type": "tag_includes", "value": "quote-request" }
+  ],
+  "actions": [
+    {
+      "type": "send_internal_email",
+      "to": "{{ shop.metafields.quote.settings.value | parse_json | dig: 'merchantNotificationEmail' }}",
+      "subject": "New quote request: {{ draftOrder.name }}",
+      "body_template": "new-quote-merchant-body"
+    }
+  ]
+}

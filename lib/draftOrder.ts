@@ -1,0 +1,135 @@
+import { adminGraphQL, type ShopifyAdminContext } from "./shopify";
+import { DEDUPE_WINDOW_MS, QUOTE_REQUEST_TAG, type QuoteSubmission } from "./quote";
+
+const DRAFT_ORDER_CREATE = /* GraphQL */ `
+  mutation DraftOrderCreate($input: DraftOrderInput!) {
+    draftOrderCreate(input: $input) {
+      draftOrder { id name invoiceUrl createdAt }
+      userErrors { field message }
+    }
+  }
+`;
+
+const DRAFT_ORDER_UPDATE = /* GraphQL */ `
+  mutation DraftOrderUpdate($id: ID!, $input: DraftOrderInput!) {
+    draftOrderUpdate(id: $id, input: $input) {
+      draftOrder { id name }
+      userErrors { field message }
+    }
+  }
+`;
+
+const RECENT_DRAFTS_BY_EMAIL = /* GraphQL */ `
+  query RecentDrafts($query: String!) {
+    draftOrders(first: 5, query: $query, sortKey: UPDATED_AT, reverse: true) {
+      edges {
+        node {
+          id
+          createdAt
+          tags
+          email
+          lineItems(first: 100) {
+            edges { node { variant { id } quantity title } }
+          }
+        }
+      }
+    }
+  }
+`;
+
+type DraftOrderCreateData = {
+  draftOrderCreate: {
+    draftOrder: { id: string; name: string; invoiceUrl: string | null; createdAt: string } | null;
+    userErrors: Array<{ field: string[] | null; message: string }>;
+  };
+};
+
+type RecentDraftsData = {
+  draftOrders: {
+    edges: Array<{
+      node: {
+        id: string;
+        createdAt: string;
+        tags: string[];
+        email: string | null;
+        lineItems: { edges: Array<{ node: { variant: { id: string } | null; quantity: number; title: string } }> };
+      };
+    }>;
+  };
+};
+
+export type QuoteDraftOrder = {
+  id: string;
+  name: string;
+  invoiceUrl: string | null;
+  deduped: boolean;
+};
+
+export function buildDraftOrderInput(
+  submission: QuoteSubmission,
+  customerId: string,
+): Record<string, unknown> {
+  const customAttributes: Array<{ key: string; value: string }> = [
+    { key: "source", value: "quote-request" },
+  ];
+  if (submission.contact_phone) customAttributes.push({ key: "phone", value: submission.contact_phone });
+  if (submission.project_address) customAttributes.push({ key: "project_address", value: submission.project_address });
+  if (submission.timeline) customAttributes.push({ key: "timeline", value: submission.timeline });
+  if (submission.budget_range) customAttributes.push({ key: "budget_range", value: submission.budget_range });
+  if (submission.floor_plan_file_id) customAttributes.push({ key: "floor_plan_file_id", value: submission.floor_plan_file_id });
+
+  return {
+    tags: [QUOTE_REQUEST_TAG],
+    note: submission.notes || undefined,
+    email: submission.contact_email,
+    purchasingEntity: { customerId },
+    lineItems: submission.line_items.map((li) => ({
+      variantId: li.variantId,
+      quantity: li.qty,
+      customAttributes: li.note ? [{ key: "customer_note", value: li.note }] : undefined,
+    })),
+    customAttributes,
+    useCustomerDefaultAddress: true,
+  };
+}
+
+export async function findRecentDuplicateDraft(
+  ctx: ShopifyAdminContext,
+  email: string,
+  now: number = Date.now(),
+): Promise<{ id: string } | null> {
+  const data = await adminGraphQL<RecentDraftsData>(ctx, RECENT_DRAFTS_BY_EMAIL, {
+    query: `email:${JSON.stringify(email)} tag:${QUOTE_REQUEST_TAG} status:open`,
+  });
+  for (const edge of data.draftOrders.edges) {
+    const created = Date.parse(edge.node.createdAt);
+    if (Number.isFinite(created) && now - created < DEDUPE_WINDOW_MS) {
+      return { id: edge.node.id };
+    }
+  }
+  return null;
+}
+
+export async function createDraftOrderFromQuote(
+  ctx: ShopifyAdminContext,
+  submission: QuoteSubmission,
+  customerId: string,
+): Promise<QuoteDraftOrder> {
+  const duplicate = await findRecentDuplicateDraft(ctx, submission.contact_email);
+  if (duplicate) {
+    await adminGraphQL(ctx, DRAFT_ORDER_UPDATE, {
+      id: duplicate.id,
+      input: buildDraftOrderInput(submission, customerId),
+    });
+    return { id: duplicate.id, name: "(appended)", invoiceUrl: null, deduped: true };
+  }
+
+  const data = await adminGraphQL<DraftOrderCreateData>(ctx, DRAFT_ORDER_CREATE, {
+    input: buildDraftOrderInput(submission, customerId),
+  });
+  const d = data.draftOrderCreate.draftOrder;
+  if (!d) {
+    throw new Error(`draftOrderCreate failed: ${JSON.stringify(data.draftOrderCreate.userErrors)}`);
+  }
+  return { id: d.id, name: d.name, invoiceUrl: d.invoiceUrl, deduped: false };
+}

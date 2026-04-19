@@ -1,0 +1,16 @@
+{
+  "_note": "Reference template. Import in Shopify Flow (Workflows → Import) or recreate manually using flows/README.md.",
+  "name": "New quote request → confirm to customer",
+  "trigger": { "type": "draft_orders/create" },
+  "conditions": [
+    { "type": "tag_includes", "value": "quote-request" }
+  ],
+  "actions": [
+    {
+      "type": "send_customer_email",
+      "to": "{{ draftOrder.email }}",
+      "subject": "We received your quote request",
+      "body_template": "new-quote-customer-body"
+    }
+  ]
+}

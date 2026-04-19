@@ -1,0 +1,7 @@
+api_version = "2025-07"
+uid = "ea57d91f-e567-7f24-9a36-908f7060d7948d223897"
+
+[[extensions]]
+type = "theme"
+name = "Quote Storefront"
+handle = "quote-storefront"

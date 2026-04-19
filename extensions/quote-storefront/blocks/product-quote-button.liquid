@@ -1,0 +1,47 @@
+{% comment %}
+  Product page block: replaces price + Add to Cart with "Request Quote" when
+  product.metafields.quote.quote_only is true.
+{% endcomment %}
+
+{%- assign is_quote_only = product.metafields.quote.quote_only -%}
+
+{%- if is_quote_only -%}
+  <style>
+    #shopify-section-{{ section.id }} ~ *,
+    .product__info-wrapper {
+      --qr-hide: none;
+    }
+    .product .price,
+    .product__info-wrapper .price,
+    .product-form__buttons,
+    .product-form__submit {
+      display: var(--qr-hide, revert) !important;
+    }
+  </style>
+
+  <div class="qr-product-cta" data-qr-product
+       data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+       data-product-id="{{ product.id }}"
+       data-product-title="{{ product.title | escape }}"
+       data-product-image="{{ product.featured_image | image_url: width: 200 }}">
+    <p class="qr-product-cta__hint">{{ block.settings.hint_text | default: 'Price on request — add to your quote for a personalized estimate.' }}</p>
+    <button type="button" class="qr-btn qr-btn--primary" data-qr-add-to-quote>
+      {{ block.settings.button_text | default: 'Add to Quote' }}
+    </button>
+    <a href="/pages/{{ block.settings.quote_page_handle | default: 'request-quote' }}" class="qr-btn qr-btn--secondary" data-qr-view-quote>
+      View Quote
+    </a>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Quote: Product CTA",
+  "target": "section",
+  "settings": [
+    { "type": "text", "id": "button_text", "label": "Button text", "default": "Add to Quote" },
+    { "type": "text", "id": "hint_text", "label": "Hint text", "default": "Price on request — add to your quote for a personalized estimate." },
+    { "type": "text", "id": "quote_page_handle", "label": "Quote page handle", "default": "request-quote" }
+  ]
+}
+{% endschema %}

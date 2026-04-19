@@ -1,0 +1,81 @@
+/* Hide price on collection cards for products tagged quote-only. */
+.product-card[data-product-tags~="quote-only"] .price,
+.card-wrapper[data-product-tags~="quote-only"] .price,
+.grid__item[data-product-tags~="quote-only"] .price { display: none; }
+
+/* Product CTA */
+.qr-product-cta { margin: 16px 0; display: flex; flex-direction: column; gap: 10px; max-width: 420px; }
+.qr-product-cta__hint { margin: 0; color: #555; font-size: 14px; }
+
+.qr-btn { display: inline-block; padding: 12px 18px; border-radius: 6px; border: 0; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; }
+.qr-btn--primary { background: #111; color: #fff; }
+.qr-btn--primary:hover { background: #222; }
+.qr-btn--secondary { background: transparent; color: #111; border: 1px solid #111; }
+
+/* FAB */
+.qr-fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 9998;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 18px; border: 0; border-radius: 999px;
+  background: #111; color: #fff; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.qr-fab__count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 999px; background: #fff; color: #111; font-size: 12px;
+}
+
+/* Drawer */
+.qr-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw);
+  background: #fff; z-index: 9999;
+  transform: translateX(100%); transition: transform 0.2s ease-out;
+  display: flex; flex-direction: column;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.12);
+}
+.qr-drawer.is-open { transform: translateX(0); }
+.qr-drawer__header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #eee; }
+.qr-drawer__body { flex: 1; overflow-y: auto; padding: 12px 20px; }
+.qr-drawer__footer { display: flex; gap: 8px; padding: 16px 20px; border-top: 1px solid #eee; }
+.qr-drawer__footer .qr-btn { flex: 1; }
+
+.qr-drawer__scrim {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9997;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.qr-drawer__scrim.is-open { opacity: 1; pointer-events: auto; }
+
+body.qr-noscroll { overflow: hidden; }
+
+.qr-icon-btn { background: transparent; border: 0; font-size: 28px; line-height: 1; cursor: pointer; }
+
+.qr-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.qr-row__img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; background: #f3f3f3; }
+.qr-row__main { flex: 1; }
+.qr-row__title { font-weight: 600; margin-bottom: 6px; }
+.qr-row__qty { display: flex; align-items: center; gap: 6px; }
+.qr-row__qty input { width: 48px; text-align: center; padding: 4px; }
+.qr-row__qty button { padding: 4px 10px; }
+.qr-row__remove { margin-left: auto; background: transparent; border: 0; color: #a00; cursor: pointer; }
+
+.qr-empty { color: #666; font-style: italic; }
+
+/* Request page */
+.qr-request-page { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+.qr-layout { display: grid; grid-template-columns: 320px 1fr; gap: 32px; }
+@media (max-width: 720px) { .qr-layout { grid-template-columns: 1fr; } }
+.qr-summary { background: #fafafa; padding: 20px; border-radius: 8px; }
+.qr-summary ul { list-style: none; padding: 0; margin: 0; }
+.qr-summary-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; }
+
+.qr-form label { display: block; margin-bottom: 14px; font-size: 14px; font-weight: 500; }
+.qr-form input[type="text"], .qr-form input[type="email"], .qr-form input[type="tel"], .qr-form textarea {
+  display: block; width: 100%; margin-top: 4px;
+  padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
+}
+.qr-form input[type="file"] { margin-top: 4px; }
+.qr-form .qr-btn { margin-top: 8px; }
+.qr-status[data-kind="error"] { color: #a00; }
+.qr-status[data-kind="success"] { color: #0a7; }
+.qr-status[data-kind="pending"] { color: #666; }

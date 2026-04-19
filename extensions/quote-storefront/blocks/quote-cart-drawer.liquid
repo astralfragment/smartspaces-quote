@@ -1,0 +1,43 @@
+{% comment %}
+  App embed: floating button + slide-over drawer showing the quote cart.
+  Loads on every page; reads from localStorage (qr:cart).
+{% endcomment %}
+
+{{ 'quote-cart.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'quote-cart.js' | asset_url }}" defer></script>
+
+<div id="qr-drawer-root" data-qr-drawer
+     data-logged-in-customer-id="{{ customer.id | default: '' }}"
+     data-quote-page="/pages/{{ block.settings.quote_page_handle | default: 'request-quote' }}">
+  <button type="button" class="qr-fab" data-qr-open-drawer aria-label="Open quote cart">
+    <span class="qr-fab__label">{{ block.settings.fab_text | default: 'Quote' }}</span>
+    <span class="qr-fab__count" data-qr-count>0</span>
+  </button>
+
+  <aside class="qr-drawer" data-qr-panel aria-hidden="true">
+    <header class="qr-drawer__header">
+      <h2>Your Quote</h2>
+      <button type="button" class="qr-icon-btn" data-qr-close-drawer aria-label="Close">&times;</button>
+    </header>
+    <div class="qr-drawer__body" data-qr-items>
+      <p class="qr-empty">Your quote is empty. Add quote-only products from any product page.</p>
+    </div>
+    <footer class="qr-drawer__footer">
+      <button type="button" class="qr-btn qr-btn--secondary" data-qr-clear>Clear</button>
+      <a class="qr-btn qr-btn--primary" data-qr-goto>Request Quote</a>
+    </footer>
+  </aside>
+
+  <div class="qr-drawer__scrim" data-qr-scrim></div>
+</div>
+
+{% schema %}
+{
+  "name": "Quote: Cart Drawer",
+  "target": "body",
+  "settings": [
+    { "type": "text", "id": "fab_text", "label": "Floating button label", "default": "Quote" },
+    { "type": "text", "id": "quote_page_handle", "label": "Quote page handle", "default": "request-quote" }
+  ]
+}
+{% endschema %}
