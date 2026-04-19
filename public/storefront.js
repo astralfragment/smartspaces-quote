@@ -378,7 +378,17 @@
     refreshSummary();
   }
 
+  function ensureStyles() {
+    if (document.getElementById("qr-storefront-styles")) return;
+    var link = document.createElement("link");
+    link.id = "qr-storefront-styles";
+    link.rel = "stylesheet";
+    link.href = "https://smartspaces-quote.vercel.app/storefront.css";
+    document.head.appendChild(link);
+  }
+
   function boot() {
+    ensureStyles();
     getSettings().then(function (settings) {
       if (isProductPage()) runPDP(settings);
       if (isCartPage()) runCart(settings);
