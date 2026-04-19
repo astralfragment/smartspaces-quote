@@ -123,6 +123,21 @@
         <span class="qr-label">Phone</span>
         <input type="tel" name="contact_phone" autocomplete="tel" />
       </label>
+      <fieldset class="qr-radio-group">
+        <legend class="qr-label">Preferred contact method</legend>
+        <label class="qr-radio">
+          <input type="radio" name="preferred_contact" value="email" checked />
+          <span>Email</span>
+        </label>
+        <label class="qr-radio">
+          <input type="radio" name="preferred_contact" value="phone" />
+          <span>Phone</span>
+        </label>
+        <label class="qr-radio">
+          <input type="radio" name="preferred_contact" value="whatsapp" />
+          <span>WhatsApp</span>
+        </label>
+      </fieldset>
       <label>
         <span class="qr-label">Project address</span>
         <textarea name="project_address" rows="2" autocomplete="street-address"></textarea>
@@ -135,6 +150,31 @@
         <span class="qr-label">Budget range</span>
         <input type="text" name="budget_range" placeholder="e.g. $20k–$50k" />
       </label>
+      <div class="qr-rooms" data-qr-rooms>
+        <div class="qr-rooms__header">
+          <span class="qr-label">Rooms / zones</span>
+          <button type="button" class="qr-btn qr-btn--secondary qr-btn--sm" data-qr-add-room>+ Add room</button>
+        </div>
+        <p class="qr-help">Optional — list the rooms you'd like quoted (e.g. Media Room, Master Suite).</p>
+        <ul class="qr-rooms__list" data-qr-rooms-list></ul>
+        <template data-qr-room-template>
+          <li class="qr-room">
+            <div class="qr-room__fields">
+              <input type="text" class="qr-room__name" placeholder="Room name (e.g. Living Room)" maxlength="100" />
+              <input type="text" class="qr-room__notes" placeholder="Notes (optional)" maxlength="500" />
+            </div>
+            <button type="button" class="qr-room__remove" aria-label="Remove room">×</button>
+          </li>
+        </template>
+      </div>
+      <label class="qr-checkbox">
+        <input type="checkbox" name="install_required" data-qr-install />
+        <span>Installation required</span>
+      </label>
+      <label data-qr-existing-system-wrapper>
+        <span class="qr-label">Existing system</span>
+        <input type="text" name="existing_system" data-qr-existing-system placeholder="e.g. Control4 / Crestron / Savant / None" maxlength="200" disabled />
+      </label>
       <label>
         <span class="qr-label">Project details</span>
         <textarea name="notes" rows="4" placeholder="Rooms, zones, existing systems, integrations, etc."></textarea>
@@ -142,6 +182,7 @@
       <label>
         <span class="qr-label">Floor plan (optional — PDF or image)</span>
         <input type="file" name="floor_plan" accept=".pdf,image/*" />
+        <p class="qr-file-hint" data-qr-file-hint hidden></p>
       </label>
 
       {%- comment %} Honeypot — real users never fill this. {% endcomment -%}
@@ -163,6 +204,18 @@
 <script>
   (function () {
     var PROXY_URL = '/apps/quote/submit';
+    var MAX_ROOMS = 50;
+    var MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+    var ERROR_MESSAGES = {
+      validation_failed: 'Some fields look off — please review and try again.',
+      rate_limited: 'Too many requests. Please wait a moment and try again.',
+      cart_unavailable: 'We could not read your cart. Please refresh and try again.',
+      hmac_invalid: 'Your session expired. Please refresh the page and resubmit.',
+      network_error: 'Network error. Please check your connection and try again.',
+      file_too_large: 'Floor plan is too large. Please use a file under 10 MB.',
+      unsupported_file: 'Floor plan type is not supported. Use PDF or an image.'
+    };
 
     function getPageLineIds() {
       var nodes = document.querySelectorAll('[data-qr-request-page] [data-qr-line]');
@@ -202,6 +255,92 @@
       }
     }
 
+    function collectRooms(form) {
+      var rows = form.querySelectorAll('[data-qr-rooms-list] .qr-room');
+      var out = [];
+      rows.forEach(function (row) {
+        var nameEl = row.querySelector('.qr-room__name');
+        var notesEl = row.querySelector('.qr-room__notes');
+        var name = nameEl ? String(nameEl.value || '').trim() : '';
+        if (!name) return;
+        var notes = notesEl ? String(notesEl.value || '').trim() : '';
+        var entry = { name: name };
+        if (notes) entry.notes = notes;
+        out.push(entry);
+      });
+      return out;
+    }
+
+    function wireRooms(form) {
+      var wrapper = form.querySelector('[data-qr-rooms]');
+      if (!wrapper) return;
+      var list = wrapper.querySelector('[data-qr-rooms-list]');
+      var tpl = wrapper.querySelector('[data-qr-room-template]');
+      var addBtn = wrapper.querySelector('[data-qr-add-room]');
+      if (!list || !tpl || !addBtn) return;
+
+      function refreshAddState() {
+        var count = list.querySelectorAll('.qr-room').length;
+        addBtn.disabled = count >= MAX_ROOMS;
+      }
+
+      addBtn.addEventListener('click', function () {
+        if (list.querySelectorAll('.qr-room').length >= MAX_ROOMS) return;
+        var frag = tpl.content.cloneNode(true);
+        list.appendChild(frag);
+        refreshAddState();
+      });
+
+      list.addEventListener('click', function (ev) {
+        var target = ev.target;
+        if (target && target.classList && target.classList.contains('qr-room__remove')) {
+          var li = target.closest('.qr-room');
+          if (li && li.parentNode) li.parentNode.removeChild(li);
+          refreshAddState();
+        }
+      });
+    }
+
+    function wireInstall(form) {
+      var cb = form.querySelector('[data-qr-install]');
+      var input = form.querySelector('[data-qr-existing-system]');
+      if (!cb || !input) return;
+      cb.addEventListener('change', function () {
+        if (cb.checked) {
+          input.disabled = false;
+        } else {
+          input.value = '';
+          input.disabled = true;
+        }
+      });
+    }
+
+    function wireFileHint(form) {
+      var fileInput = form.querySelector('input[name="floor_plan"]');
+      var hint = form.querySelector('[data-qr-file-hint]');
+      if (!fileInput || !hint) return;
+      fileInput.addEventListener('change', function () {
+        var file = fileInput.files && fileInput.files[0];
+        if (!file) {
+          hint.hidden = true;
+          hint.textContent = '';
+          hint.classList.remove('qr-file-hint--error');
+          return;
+        }
+        if (file.size > MAX_FILE_BYTES) {
+          fileInput.value = '';
+          hint.textContent = 'File too large — 10 MB max.';
+          hint.classList.add('qr-file-hint--error');
+          hint.hidden = false;
+          return;
+        }
+        var mb = (file.size / (1024 * 1024)).toFixed(1);
+        hint.textContent = file.name + ' \u00b7 ' + mb + ' MB';
+        hint.classList.remove('qr-file-hint--error');
+        hint.hidden = false;
+      });
+    }
+
     function wireForm() {
       var page = document.querySelector('[data-qr-request-page]');
       if (!page) return;
@@ -209,6 +348,10 @@
       if (!form) return;
       var statusEl = form.querySelector('[data-qr-status]');
       var submitBtn = form.querySelector('[data-qr-submit]');
+
+      wireRooms(form);
+      wireInstall(form);
+      wireFileHint(form);
 
       form.addEventListener('submit', async function (ev) {
         ev.preventDefault();
@@ -249,9 +392,13 @@
           contact_name: String(fd.get('contact_name') || ''),
           contact_email: String(fd.get('contact_email') || ''),
           contact_phone: String(fd.get('contact_phone') || ''),
+          preferred_contact: String(fd.get('preferred_contact') || 'email'),
           project_address: String(fd.get('project_address') || ''),
           timeline: String(fd.get('timeline') || ''),
           budget_range: String(fd.get('budget_range') || ''),
+          install_required: fd.get('install_required') === 'on',
+          existing_system: String(fd.get('existing_system') || ''),
+          rooms: collectRooms(form),
           notes: String(fd.get('notes') || ''),
           honeypot: String(fd.get('honeypot') || ''),
           line_items: items.map(function (it) {
@@ -284,7 +431,9 @@
           if (!res.ok) {
             var errJson = {};
             try { errJson = await res.json(); } catch (_) {}
-            setStatus(statusEl, 'error', (errJson && errJson.error) ? errJson.error : 'Something went wrong. Please try again.');
+            var code = errJson && errJson.error;
+            var msg = (code && ERROR_MESSAGES[code]) || code || 'Something went wrong. Please try again.';
+            setStatus(statusEl, 'error', msg);
             submitBtn.disabled = false;
             return;
           }
@@ -299,7 +448,7 @@
           );
           form.reset();
         } catch (_) {
-          setStatus(statusEl, 'error', 'Network error. Please try again.');
+          setStatus(statusEl, 'error', ERROR_MESSAGES.network_error);
           submitBtn.disabled = false;
         }
       });

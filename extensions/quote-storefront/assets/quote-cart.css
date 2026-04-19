@@ -236,3 +236,131 @@
 .qr-status[data-kind="success"] { color: #0a7; }
 .qr-status[data-kind="pending"] { color: #666; }
 .qr-status a { color: inherit; text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+   Extended RFQ controls — radios, checkbox, rooms repeater, file hint
+   -------------------------------------------------------------------------- */
+
+.qr-radio-group {
+  border: 0;
+  padding: 0;
+  margin: 0 0 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.qr-radio-group .qr-label { margin-bottom: 6px; width: 100%; }
+
+.qr-radio {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin: 0 !important;
+  font-size: 14px;
+  font-weight: 400 !important;
+  cursor: pointer;
+}
+.qr-radio input[type="radio"] { margin: 0; }
+
+.qr-checkbox {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px !important;
+  font-size: 14px;
+  font-weight: 400 !important;
+  cursor: pointer;
+}
+.qr-checkbox input[type="checkbox"] { margin: 0; }
+
+.qr-help {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.qr-rooms { margin-bottom: 14px; }
+
+.qr-rooms__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.qr-rooms__header .qr-label { margin: 0; }
+
+.qr-rooms__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qr-room {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.qr-room__fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.qr-room__fields input[type="text"] {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.qr-room__remove {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #555;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.qr-room__remove:hover { background: #f3f3f3; color: #111; }
+
+.qr-btn--sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.qr-btn[disabled],
+.qr-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qr-form input[data-qr-existing-system][disabled] {
+  opacity: 0.5;
+  background: #f7f7f7;
+  cursor: not-allowed;
+}
+
+.qr-file-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #666;
+}
+.qr-file-hint--error { color: #a00; }
