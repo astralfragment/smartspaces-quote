@@ -127,9 +127,9 @@
   function renderCartSection(settings, cart) {
     var items = cart.items || [];
     var quoteItems = items.filter(function (i) {
-      var tags = (i.product && i.product.tags) || [];
-      if (Array.isArray(tags)) return tags.indexOf(settings.quoteOnlyTag) !== -1;
-      return (tags || "").toString().split(",").map(function (s) { return s.trim(); }).indexOf(settings.quoteOnlyTag) !== -1;
+      var rawTags = i.product_tags || (i.product && i.product.tags) || [];
+      var tags = Array.isArray(rawTags) ? rawTags : String(rawTags).split(",").map(function (s) { return s.trim(); });
+      return tags.indexOf(settings.quoteOnlyTag) !== -1;
     });
     var sellableCount = items.length - quoteItems.length;
 
