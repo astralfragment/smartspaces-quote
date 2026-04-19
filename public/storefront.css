@@ -45,3 +45,5 @@
 .qr-status[data-kind="success"] { color: #0a7; }
 .qr-status[data-kind="pending"] { color: #666; }
 .qr-status a { color: inherit; text-decoration: underline; }
+
+[data-qr-quote-only="true"] :is(.price, .price__current, .price__sale, .price__regular, .cart-item__price, .cart-item__price-wrapper, .cart-item__totals, .cart__line-total, .line-item__total, .product-price, [class*="__price"], [class*="-price"]) { visibility: hidden !important; }

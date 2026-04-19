@@ -146,6 +146,54 @@
     });
   }
 
+  function findCartAnchor() {
+    var selectors = [
+      "cart-items",
+      "cart-drawer-items",
+      "form[action='/cart']",
+      "form[action*='/cart']",
+      "main [data-section-type='cart']",
+      "#MainContent form",
+      "#MainContent",
+      "main"
+    ];
+    for (var i = 0; i < selectors.length; i++) {
+      var n = document.querySelector(selectors[i]);
+      if (n) return n;
+    }
+    return null;
+  }
+
+  function whenCartAnchorReady(callback) {
+    var anchor = findCartAnchor();
+    if (anchor) return callback(anchor);
+    var observer = new MutationObserver(function () {
+      var a = findCartAnchor();
+      if (a) { observer.disconnect(); clearTimeout(timer); callback(a); }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    var timer = setTimeout(function () {
+      observer.disconnect();
+      callback(findCartAnchor());
+    }, 3000);
+  }
+
+  function markQuoteLines(quoteItems) {
+    var keys = quoteItems.map(function (i) { return String(i.key); });
+    if (keys.length === 0) return;
+    var candidates = document.querySelectorAll(
+      "[data-cart-item-key], [data-key], [data-line-key]"
+    );
+    candidates.forEach(function (node) {
+      var key = node.getAttribute("data-cart-item-key")
+        || node.getAttribute("data-key")
+        || node.getAttribute("data-line-key");
+      if (key && keys.indexOf(String(key)) !== -1) {
+        node.setAttribute("data-qr-quote-only", "true");
+      }
+    });
+  }
+
   function renderCartSection(settings, cart) {
     if (document.querySelector(".qr-cart-section")) return;
     var items = cart.items || [];
@@ -157,6 +205,8 @@
     if (prev) prev.remove();
 
     if (quoteItems.length === 0) return;
+
+    markQuoteLines(quoteItems);
 
     // Build section
     var list = el("ul", { class: "qr-cart-section__list" },
@@ -182,13 +232,15 @@
       el("div", { class: "qr-cart-section__cta" }, [cta]),
     ]);
 
-    // Insert before the main cart form, or append to main
-    var cartRoot = document.querySelector("form[action*='/cart']") || document.querySelector(".cart") || document.querySelector("main");
-    if (cartRoot && cartRoot.parentNode) {
-      cartRoot.parentNode.insertBefore(section, cartRoot);
-    } else {
-      (document.querySelector("main") || document.body).appendChild(section);
-    }
+    whenCartAnchorReady(function (cartRoot) {
+      markQuoteLines(quoteItems);
+      if (document.getElementById("qr-cart-section")) return;
+      if (cartRoot && cartRoot.parentNode && cartRoot.tagName !== "MAIN") {
+        cartRoot.parentNode.insertBefore(section, cartRoot);
+      } else {
+        (document.querySelector("main") || document.body).prepend(section);
+      }
+    });
 
     var checkoutSelectors = [
       '[name="checkout"]',
