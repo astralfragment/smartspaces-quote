@@ -1,12 +1,10 @@
 query CartValidationsGenerateRunInput {
   cart {
     lines {
-      quantity
       merchandise {
         __typename
         ... on ProductVariant {
           product {
-            id
             title
             hasTags(tags: ["quote-only"]) {
               tag
