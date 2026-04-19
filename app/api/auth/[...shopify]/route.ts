@@ -145,6 +145,22 @@ async function ensureMetafieldDefinitions(shop: string, token: string) {
       },
       update: null,
     },
+    {
+      create: {
+        name: "Quote settings",
+        description: "Storefront behavior config (CTA text, hide price, etc.) managed by the app.",
+        namespace: "quote",
+        key: "settings",
+        type: "json",
+        ownerType: "SHOP",
+      },
+      update: {
+        namespace: "quote",
+        key: "settings",
+        ownerType: "SHOP",
+        access: { storefront: "PUBLIC_READ" },
+      },
+    },
   ];
   const url = `https://${shop}/admin/api/${API_VERSION}/graphql.json`;
   for (const def of defs) {

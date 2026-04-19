@@ -3,7 +3,7 @@
 client_id = "4d779ee13019d49ad22bdd0647fcb625"
 name = "smartspaces-quote"
 handle = "smartspaces-quote"
-application_url = "https://smartspaces-quote.vercel.app"
+application_url = "https://smartspaces-quote.vercel.app/admin"
 embedded = true
 
 [build]
@@ -17,7 +17,7 @@ api_version = "2026-07"
   uri = "/api/webhooks/app-uninstalled"
 
 [access_scopes]
-scopes = "read_customers,read_draft_orders,read_products,write_customers,write_draft_orders,write_files,write_products"
+scopes = "read_customers,read_draft_orders,read_products,write_content,write_customers,write_draft_orders,write_files,write_products"
 
 [auth]
 redirect_urls = [

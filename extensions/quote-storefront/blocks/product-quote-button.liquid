@@ -1,22 +1,60 @@
 {% comment %}
   Product page block: replaces price + Add to Cart with "Request Quote" when
-  product.metafields.quote.quote_only is true.
+  product.metafields.quote.quote_only is true OR the product has the configured
+  quote-only tag. Text + behavior read from shop.metafields.quote.settings.
 {% endcomment %}
 
-{%- assign is_quote_only = product.metafields.quote.quote_only -%}
+{%- liquid
+  assign raw_settings = shop.metafields.quote.settings.value
+  assign default_tag = 'quote-only'
+  assign default_add = 'Add to Quote'
+  assign default_req = 'Request Quote'
+  assign default_hint = 'Price on request — add to your quote for a personalized estimate.'
+
+  if raw_settings == blank
+    assign quote_tag = default_tag
+    assign cta_add = default_add
+    assign cta_req = default_req
+    assign hint = default_hint
+    assign hide_price = true
+    assign replace_atc = true
+  else
+    assign s = raw_settings
+    assign quote_tag = s.quoteOnlyTag | default: default_tag
+    assign cta_add = s.ctaAddToQuote | default: default_add
+    assign cta_req = s.ctaRequestQuote | default: default_req
+    assign hint = s.hintText | default: default_hint
+    assign hide_price = s.hidePriceOnStorefront
+    assign replace_atc = s.replaceAddToCart
+    if hide_price == nil
+      assign hide_price = true
+    endif
+    if replace_atc == nil
+      assign replace_atc = true
+    endif
+  endif
+
+  assign is_quote_only = false
+  if product.metafields.quote.quote_only
+    assign is_quote_only = true
+  endif
+  if product.tags contains quote_tag
+    assign is_quote_only = true
+  endif
+-%}
 
 {%- if is_quote_only -%}
   <style>
-    #shopify-section-{{ section.id }} ~ *,
-    .product__info-wrapper {
-      --qr-hide: none;
-    }
-    .product .price,
+    {% if hide_price %}
+    #MainProduct-{{ section.id }} .price,
     .product__info-wrapper .price,
-    .product-form__buttons,
-    .product-form__submit {
-      display: var(--qr-hide, revert) !important;
-    }
+    .product .price { display: none !important; }
+    {% endif %}
+    {% if replace_atc %}
+    #MainProduct-{{ section.id }} .product-form__buttons,
+    .product__info-wrapper .product-form__buttons,
+    .product-form__submit { display: none !important; }
+    {% endif %}
   </style>
 
   <div class="qr-product-cta" data-qr-product
@@ -24,13 +62,9 @@
        data-product-id="{{ product.id }}"
        data-product-title="{{ product.title | escape }}"
        data-product-image="{{ product.featured_image | image_url: width: 200 }}">
-    <p class="qr-product-cta__hint">{{ block.settings.hint_text | default: 'Price on request — add to your quote for a personalized estimate.' }}</p>
-    <button type="button" class="qr-btn qr-btn--primary" data-qr-add-to-quote>
-      {{ block.settings.button_text | default: 'Add to Quote' }}
-    </button>
-    <a href="/pages/{{ block.settings.quote_page_handle | default: 'request-quote' }}" class="qr-btn qr-btn--secondary" data-qr-view-quote>
-      View Quote
-    </a>
+    <p class="qr-product-cta__hint">{{ hint }}</p>
+    <button type="button" class="qr-btn qr-btn--primary" data-qr-add-to-quote>{{ cta_add | escape }}</button>
+    <a href="/pages/{{ block.settings.quote_page_handle | default: 'request-quote' }}" class="qr-btn qr-btn--secondary" data-qr-view-quote>{{ cta_req | escape }}</a>
   </div>
 {%- endif -%}
 
@@ -39,8 +73,6 @@
   "name": "Quote: Product CTA",
   "target": "section",
   "settings": [
-    { "type": "text", "id": "button_text", "label": "Button text", "default": "Add to Quote" },
-    { "type": "text", "id": "hint_text", "label": "Hint text", "default": "Price on request — add to your quote for a personalized estimate." },
     { "type": "text", "id": "quote_page_handle", "label": "Quote page handle", "default": "request-quote" }
   ]
 }
