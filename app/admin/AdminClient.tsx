@@ -114,8 +114,8 @@ export default function AdminClient() {
           />
           <p style={hint}>
             Any product with this tag — or with the pinned <code>Quote only</code> metafield set
-            to True — is treated as quote-only. The tag is also what hides price on collection
-            grids.
+            to True — is treated as quote-only. Price is hidden and the Add to Cart button is
+            relabeled to your &ldquo;Add to Quote&rdquo; CTA.
           </p>
         </Label>
       </section>
@@ -124,23 +124,18 @@ export default function AdminClient() {
         <h2 style={h2}>Storefront behavior</h2>
         <Check
           label="Hide price on quote-only product pages"
-          checked={settings.hidePriceOnStorefront}
-          onChange={(v) => setSettings({ ...settings, hidePriceOnStorefront: v })}
+          checked={settings.hidePriceOnPDP}
+          onChange={(v) => setSettings({ ...settings, hidePriceOnPDP: v })}
         />
         <Check
           label="Hide price on collection cards (requires the tag)"
-          checked={settings.hidePriceOnCollectionCards}
-          onChange={(v) => setSettings({ ...settings, hidePriceOnCollectionCards: v })}
-        />
-        <Check
-          label="Replace Add to Cart with Add to Quote on quote-only products"
-          checked={settings.replaceAddToCart}
-          onChange={(v) => setSettings({ ...settings, replaceAddToCart: v })}
+          checked={settings.hidePriceOnCollection}
+          onChange={(v) => setSettings({ ...settings, hidePriceOnCollection: v })}
         />
       </section>
 
       <section style={card}>
-        <h2 style={h2}>Button and hint text</h2>
+        <h2 style={h2}>Button text</h2>
         <Label>
           Add to Quote button
           <input
@@ -155,14 +150,6 @@ export default function AdminClient() {
             style={input}
             value={settings.ctaRequestQuote}
             onChange={(e) => setSettings({ ...settings, ctaRequestQuote: e.target.value })}
-          />
-        </Label>
-        <Label>
-          Hint text (shown on the product page)
-          <textarea
-            style={{ ...input, minHeight: 70 }}
-            value={settings.hintText}
-            onChange={(e) => setSettings({ ...settings, hintText: e.target.value })}
           />
         </Label>
       </section>

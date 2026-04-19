@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { buildDraftOrderInput } from "./draftOrder";
+import { buildDraftOrderInput, type DraftOrderLineItem } from "./draftOrder";
 import { QUOTE_REQUEST_TAG, type QuoteSubmission } from "./quote";
 
-const sample: QuoteSubmission = {
+const submission: QuoteSubmission = {
   contact_name: "Ada Lovelace",
   contact_email: "ada@example.com",
   contact_phone: "+1 555 0100",
@@ -11,14 +11,34 @@ const sample: QuoteSubmission = {
   budget_range: "$50k-$100k",
   notes: "Whole-home audio + lighting.",
   line_items: [
-    { variantId: "gid://shopify/ProductVariant/111", productId: "gid://shopify/Product/1", title: "Amp X", qty: 2, note: "black" },
-    { variantId: "gid://shopify/ProductVariant/222", productId: "gid://shopify/Product/2", title: "Speaker Y", qty: 6 },
+    {
+      variant_id: 111,
+      product_id: 1,
+      product_title: "Amp X",
+      quantity: 2,
+      key: "111:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    },
+    {
+      variant_id: 222,
+      product_id: 2,
+      product_title: "Speaker Y",
+      quantity: 6,
+      key: "222:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    },
   ],
-  floor_plan_file_id: "gid://shopify/GenericFile/900",
 };
 
+const lineItems: DraftOrderLineItem[] = submission.line_items.map((li) => ({
+  variantId: `gid://shopify/ProductVariant/${li.variant_id}`,
+  quantity: li.quantity,
+  title: li.product_title,
+}));
+
 describe("buildDraftOrderInput", () => {
-  const input = buildDraftOrderInput(sample, "gid://shopify/Customer/42");
+  const input = buildDraftOrderInput(
+    { submission, lineItems, floorPlanFileId: "gid://shopify/GenericFile/900" },
+    "gid://shopify/Customer/42",
+  );
 
   it("tags the draft order", () => {
     expect(input.tags).toEqual([QUOTE_REQUEST_TAG]);
@@ -29,16 +49,11 @@ describe("buildDraftOrderInput", () => {
     expect(input.email).toBe("ada@example.com");
   });
 
-  it("maps line items with per-line customer notes", () => {
-    const lineItems = input.lineItems as Array<{
-      variantId: string;
-      quantity: number;
-      customAttributes?: Array<{ key: string; value: string }>;
-    }>;
-    expect(lineItems).toHaveLength(2);
-    expect(lineItems[0]).toMatchObject({ variantId: "gid://shopify/ProductVariant/111", quantity: 2 });
-    expect(lineItems[0].customAttributes).toEqual([{ key: "customer_note", value: "black" }]);
-    expect(lineItems[1].customAttributes).toBeUndefined();
+  it("maps line items using GID variant ids", () => {
+    const items = input.lineItems as Array<{ variantId: string; quantity: number }>;
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ variantId: "gid://shopify/ProductVariant/111", quantity: 2 });
+    expect(items[1]).toMatchObject({ variantId: "gid://shopify/ProductVariant/222", quantity: 6 });
   });
 
   it("includes source + project metadata as custom attributes", () => {
@@ -55,12 +70,14 @@ describe("buildDraftOrderInput", () => {
   it("omits optional attributes when empty", () => {
     const minimal = buildDraftOrderInput(
       {
-        ...sample,
-        contact_phone: "",
-        project_address: "",
-        timeline: "",
-        budget_range: "",
-        floor_plan_file_id: undefined,
+        submission: {
+          ...submission,
+          contact_phone: "",
+          project_address: "",
+          timeline: "",
+          budget_range: "",
+        },
+        lineItems,
       },
       "gid://shopify/Customer/42",
     );

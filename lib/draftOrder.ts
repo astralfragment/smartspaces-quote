@@ -65,10 +65,28 @@ export type QuoteDraftOrder = {
   deduped: boolean;
 };
 
+/**
+ * Internal shape used to build the DraftOrderInput. The route handler is
+ * responsible for mapping the Shopify /cart.js line items to this shape
+ * (numeric ids → GIDs, key → customer_note-style attribute if desired).
+ */
+export type DraftOrderLineItem = {
+  variantId: string;
+  quantity: number;
+  title?: string;
+};
+
+export type QuoteDraftContext = {
+  submission: QuoteSubmission;
+  lineItems: DraftOrderLineItem[];
+  floorPlanFileId?: string;
+};
+
 export function buildDraftOrderInput(
-  submission: QuoteSubmission,
+  ctx: QuoteDraftContext,
   customerId: string,
 ): Record<string, unknown> {
+  const { submission, lineItems, floorPlanFileId } = ctx;
   const customAttributes: Array<{ key: string; value: string }> = [
     { key: "source", value: "quote-request" },
   ];
@@ -76,17 +94,16 @@ export function buildDraftOrderInput(
   if (submission.project_address) customAttributes.push({ key: "project_address", value: submission.project_address });
   if (submission.timeline) customAttributes.push({ key: "timeline", value: submission.timeline });
   if (submission.budget_range) customAttributes.push({ key: "budget_range", value: submission.budget_range });
-  if (submission.floor_plan_file_id) customAttributes.push({ key: "floor_plan_file_id", value: submission.floor_plan_file_id });
+  if (floorPlanFileId) customAttributes.push({ key: "floor_plan_file_id", value: floorPlanFileId });
 
   return {
     tags: [QUOTE_REQUEST_TAG],
     note: submission.notes || undefined,
     email: submission.contact_email,
     purchasingEntity: { customerId },
-    lineItems: submission.line_items.map((li) => ({
+    lineItems: lineItems.map((li) => ({
       variantId: li.variantId,
-      quantity: li.qty,
-      customAttributes: li.note ? [{ key: "customer_note", value: li.note }] : undefined,
+      quantity: li.quantity,
     })),
     customAttributes,
     useCustomerDefaultAddress: true,
@@ -112,20 +129,20 @@ export async function findRecentDuplicateDraft(
 
 export async function createDraftOrderFromQuote(
   ctx: ShopifyAdminContext,
-  submission: QuoteSubmission,
+  draftCtx: QuoteDraftContext,
   customerId: string,
 ): Promise<QuoteDraftOrder> {
-  const duplicate = await findRecentDuplicateDraft(ctx, submission.contact_email);
+  const duplicate = await findRecentDuplicateDraft(ctx, draftCtx.submission.contact_email);
   if (duplicate) {
     await adminGraphQL(ctx, DRAFT_ORDER_UPDATE, {
       id: duplicate.id,
-      input: buildDraftOrderInput(submission, customerId),
+      input: buildDraftOrderInput(draftCtx, customerId),
     });
     return { id: duplicate.id, name: "(appended)", invoiceUrl: null, deduped: true };
   }
 
   const data = await adminGraphQL<DraftOrderCreateData>(ctx, DRAFT_ORDER_CREATE, {
-    input: buildDraftOrderInput(submission, customerId),
+    input: buildDraftOrderInput(draftCtx, customerId),
   });
   const d = data.draftOrderCreate.draftOrder;
   if (!d) {

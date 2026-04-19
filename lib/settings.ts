@@ -1,25 +1,21 @@
 import { z } from "zod";
 
 export const QuoteSettingsSchema = z.object({
-  hidePriceOnStorefront: z.boolean(),
-  hidePriceOnCollectionCards: z.boolean(),
-  replaceAddToCart: z.boolean(),
+  quoteOnlyTag: z.string().min(1).max(60),
   ctaAddToQuote: z.string().min(1).max(60),
   ctaRequestQuote: z.string().min(1).max(60),
-  hintText: z.string().max(300),
-  quoteOnlyTag: z.string().min(1).max(60),
+  hidePriceOnPDP: z.boolean(),
+  hidePriceOnCollection: z.boolean(),
 });
 
 export type QuoteSettings = z.infer<typeof QuoteSettingsSchema>;
 
 export const DEFAULT_SETTINGS: QuoteSettings = {
-  hidePriceOnStorefront: true,
-  hidePriceOnCollectionCards: true,
-  replaceAddToCart: true,
+  quoteOnlyTag: "quote-only",
   ctaAddToQuote: "Add to Quote",
   ctaRequestQuote: "Request Quote",
-  hintText: "Price on request — add to your quote for a personalized estimate.",
-  quoteOnlyTag: "quote-only",
+  hidePriceOnPDP: true,
+  hidePriceOnCollection: true,
 };
 
 export const SHOP_SETTINGS_METAFIELD = {

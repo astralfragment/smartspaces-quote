@@ -1,36 +1,39 @@
 {% comment %}
-  Product page block: replaces price + Add to Cart with "Request Quote" when
-  product.metafields.quote.quote_only is true OR the product has the configured
-  quote-only tag. Text + behavior read from shop.metafields.quote.settings.
+  Product page block for quote-only products.
+
+  Does NOT render a new button. Instead:
+    - Hides the native price element (optional, per shop settings).
+    - Relabels the existing native Add-to-Cart button with the configured CTA.
+
+  Quote-only detection: product tag match OR quote.quote_only metafield.
+  Settings pulled from shop.metafields.quote.settings with safe defaults.
 {% endcomment %}
 
 {%- liquid
   assign raw_settings = shop.metafields.quote.settings.value
+
   assign default_tag = 'quote-only'
   assign default_add = 'Add to Quote'
   assign default_req = 'Request Quote'
-  assign default_hint = 'Price on request — add to your quote for a personalized estimate.'
 
   if raw_settings == blank
     assign quote_tag = default_tag
     assign cta_add = default_add
     assign cta_req = default_req
-    assign hint = default_hint
-    assign hide_price = true
-    assign replace_atc = true
+    assign hide_price_pdp = true
+    assign hide_price_col = true
   else
     assign s = raw_settings
     assign quote_tag = s.quoteOnlyTag | default: default_tag
     assign cta_add = s.ctaAddToQuote | default: default_add
     assign cta_req = s.ctaRequestQuote | default: default_req
-    assign hint = s.hintText | default: default_hint
-    assign hide_price = s.hidePriceOnStorefront
-    assign replace_atc = s.replaceAddToCart
-    if hide_price == nil
-      assign hide_price = true
+    assign hide_price_pdp = s.hidePriceOnPDP
+    if hide_price_pdp == nil
+      assign hide_price_pdp = true
     endif
-    if replace_atc == nil
-      assign replace_atc = true
+    assign hide_price_col = s.hidePriceOnCollection
+    if hide_price_col == nil
+      assign hide_price_col = true
     endif
   endif
 
@@ -44,28 +47,74 @@
 -%}
 
 {%- if is_quote_only -%}
-  <style>
-    {% if hide_price %}
-    #MainProduct-{{ section.id }} .price,
-    .product__info-wrapper .price,
-    .product .price { display: none !important; }
-    {% endif %}
-    {% if replace_atc %}
-    #MainProduct-{{ section.id }} .product-form__buttons,
-    .product__info-wrapper .product-form__buttons,
-    .product-form__submit { display: none !important; }
-    {% endif %}
-  </style>
+  {%- if hide_price_pdp -%}
+    <style>
+      #MainProduct-{{ section.id }} .price,
+      #MainProduct-{{ section.id }} .product__price,
+      #MainProduct-{{ section.id }} [data-product-price],
+      #shopify-section-{{ section.id }} .price,
+      #shopify-section-{{ section.id }} .product__price,
+      #shopify-section-{{ section.id }} [data-product-price] {
+        display: none !important;
+      }
+    </style>
+  {%- endif -%}
 
-  <div class="qr-product-cta" data-qr-product
-       data-variant-id="{{ product.selected_or_first_available_variant.id }}"
-       data-product-id="{{ product.id }}"
-       data-product-title="{{ product.title | escape }}"
-       data-product-image="{{ product.featured_image | image_url: width: 200 }}">
-    <p class="qr-product-cta__hint">{{ hint }}</p>
-    <button type="button" class="qr-btn qr-btn--primary" data-qr-add-to-quote>{{ cta_add | escape }}</button>
-    <a href="/pages/{{ block.settings.quote_page_handle | default: 'request-quote' }}" class="qr-btn qr-btn--secondary" data-qr-view-quote>{{ cta_req | escape }}</a>
-  </div>
+  <script>
+    (function () {
+      var SECTION_ID = {{ section.id | json }};
+      var CTA_TEXT = {{ cta_add | json }};
+
+      function relabel() {
+        var scope =
+          document.getElementById('MainProduct-' + SECTION_ID) ||
+          document.getElementById('shopify-section-' + SECTION_ID) ||
+          document;
+
+        var selectors = [
+          '.product-form__submit',
+          'button[name="add"]',
+          '[data-add-to-cart]',
+        ];
+
+        var seen = new Set();
+        selectors.forEach(function (sel) {
+          var nodes = scope.querySelectorAll(sel);
+          nodes.forEach(function (btn) {
+            if (seen.has(btn)) return;
+            seen.add(btn);
+            // Prefer a dedicated text span if the theme uses one;
+            // otherwise swap the button's direct text nodes.
+            var textSpan = btn.querySelector('span:not([class*="icon"]):not([hidden])');
+            if (textSpan && textSpan.childNodes.length) {
+              textSpan.textContent = CTA_TEXT;
+            } else {
+              // Walk direct child text nodes and replace the first non-empty one.
+              var replaced = false;
+              for (var i = 0; i < btn.childNodes.length; i++) {
+                var n = btn.childNodes[i];
+                if (n.nodeType === 3 && n.textContent.trim().length > 0) {
+                  n.textContent = CTA_TEXT;
+                  replaced = true;
+                  break;
+                }
+              }
+              if (!replaced) {
+                btn.textContent = CTA_TEXT;
+              }
+            }
+            btn.setAttribute('data-qr-relabeled', 'true');
+          });
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', relabel);
+      } else {
+        relabel();
+      }
+    })();
+  </script>
 {%- endif -%}
 
 {% schema %}
@@ -73,7 +122,12 @@
   "name": "Quote: Product CTA",
   "target": "section",
   "settings": [
-    { "type": "text", "id": "quote_page_handle", "label": "Quote page handle", "default": "request-quote" }
+    {
+      "type": "text",
+      "id": "quote_page_handle",
+      "label": "Quote page handle",
+      "default": "request-quote"
+    }
   ]
 }
 {% endschema %}

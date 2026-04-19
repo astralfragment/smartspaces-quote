@@ -6,7 +6,13 @@ describe("QuoteSubmissionSchema", () => {
     contact_name: "Ada",
     contact_email: "ada@example.com",
     line_items: [
-      { variantId: "gid://shopify/ProductVariant/1", productId: "gid://shopify/Product/1", title: "X", qty: 1 },
+      {
+        variant_id: 111,
+        product_id: 1,
+        product_title: "Amp X",
+        quantity: 1,
+        key: "111:abcdef0123456789abcdef0123456789",
+      },
     ],
   };
 
@@ -30,14 +36,30 @@ describe("QuoteSubmissionSchema", () => {
     expect(r.success).toBe(false);
   });
 
-  it("caps line items at 100", () => {
-    const lots = Array.from({ length: 101 }, (_, i) => ({
-      variantId: `gid://shopify/ProductVariant/${i}`,
-      productId: `gid://shopify/Product/${i}`,
-      title: "X",
-      qty: 1,
+  it("rejects more than 200 line items", () => {
+    const lots = Array.from({ length: 201 }, (_, i) => ({
+      variant_id: i + 1,
+      product_id: i + 1,
+      product_title: "X",
+      quantity: 1,
+      key: `${i + 1}:abcdef0123456789abcdef0123456789`,
     }));
     const r = QuoteSubmissionSchema.safeParse({ ...valid, line_items: lots });
     expect(r.success).toBe(false);
+  });
+
+  it("accepts optional variant_title, image, line_price", () => {
+    const r = QuoteSubmissionSchema.safeParse({
+      ...valid,
+      line_items: [
+        {
+          ...valid.line_items[0],
+          variant_title: "Black",
+          image: "https://cdn.shopify.com/x.jpg",
+          line_price: 12999,
+        },
+      ],
+    });
+    expect(r.success).toBe(true);
   });
 });

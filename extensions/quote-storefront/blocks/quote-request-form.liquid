@@ -1,0 +1,340 @@
+{% comment %}
+  Page block for /pages/request-quote.
+
+  Renders:
+    - Summary of the quote-only subset of the current cart (server-rendered
+      from cart.items, filtered by the quote-only tag/metafield).
+    - Contact form (multipart, with optional file upload + honeypot).
+
+  On submit:
+    - Fetches /cart.js client-side for a fresh snapshot.
+    - Filters to the line IDs server-rendered above (the data-qr-line-id set).
+    - POSTs payload + optional floor_plan to /apps/quote/submit.
+    - On success, removes those lines from the native Shopify cart.
+{% endcomment %}
+
+{{ 'quote-cart.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign raw_settings = shop.metafields.quote.settings.value
+
+  assign default_tag = 'quote-only'
+  assign default_submit_text = 'Submit Quote Request'
+
+  if raw_settings == blank
+    assign quote_tag = default_tag
+  else
+    assign s = raw_settings
+    assign quote_tag = s.quoteOnlyTag | default: default_tag
+  endif
+
+  assign heading = block.settings.heading | default: 'Request a Quote'
+  assign intro = block.settings.intro | default: 'Tell us about your project and we’ll get back with a tailored estimate.'
+  assign submit_text = block.settings.submit_text | default: default_submit_text
+
+  assign quote_only_count = 0
+  for item in cart.items
+    assign is_q = false
+    if item.product.tags contains quote_tag
+      assign is_q = true
+    endif
+    if item.product.metafields.quote.quote_only
+      assign is_q = true
+    endif
+    if is_q
+      assign quote_only_count = quote_only_count | plus: 1
+    endif
+  endfor
+-%}
+
+<section
+  class="qr-request-page"
+  data-qr-request-page
+  data-logged-in-customer-id="{{ customer.id | default: '' }}"
+>
+  <header class="qr-request-page__header">
+    <h1>{{ heading | escape }}</h1>
+    <p class="qr-intro">{{ intro | escape }}</p>
+  </header>
+
+  <div class="qr-layout">
+    <aside class="qr-summary" data-qr-summary>
+      <h2>Items in your quote</h2>
+      {%- if quote_only_count == 0 -%}
+        <p class="qr-empty" data-qr-summary-empty>
+          Your quote is empty — browse the shop to add items, then come back here.
+        </p>
+      {%- else -%}
+        <ul class="qr-summary__list">
+          {%- for item in cart.items -%}
+            {%- assign item_is_quote_only = false -%}
+            {%- if item.product.tags contains quote_tag -%}
+              {%- assign item_is_quote_only = true -%}
+            {%- endif -%}
+            {%- if item.product.metafields.quote.quote_only -%}
+              {%- assign item_is_quote_only = true -%}
+            {%- endif -%}
+            {%- if item_is_quote_only -%}
+              <li class="qr-summary-item" data-qr-line-id="{{ item.key }}">
+                <span
+                  data-qr-line
+                  data-qr-line-id="{{ item.key }}"
+                  hidden
+                  aria-hidden="true"
+                  style="display:none"
+                ></span>
+                {%- if item.image -%}
+                  <img
+                    class="qr-summary-item__img"
+                    src="{{ item.image | image_url: width: 120 }}"
+                    alt="{{ item.product.title | escape }}"
+                    width="60"
+                    height="60"
+                    loading="lazy"
+                  />
+                {%- else -%}
+                  <div class="qr-summary-item__img qr-summary-item__img--placeholder" aria-hidden="true"></div>
+                {%- endif -%}
+                <div class="qr-summary-item__main">
+                  <div class="qr-summary-item__title">{{ item.product.title | escape }}</div>
+                  {%- unless item.variant.title == 'Default Title' or item.variant.title == blank -%}
+                    <div class="qr-summary-item__variant">{{ item.variant.title | escape }}</div>
+                  {%- endunless -%}
+                  <div class="qr-summary-item__qty">Qty {{ item.quantity }}</div>
+                </div>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+    </aside>
+
+    <form class="qr-form" data-qr-form novalidate enctype="multipart/form-data">
+      <label>
+        <span class="qr-label">Name <span aria-hidden="true">*</span></span>
+        <input required type="text" name="contact_name" autocomplete="name" />
+      </label>
+      <label>
+        <span class="qr-label">Email <span aria-hidden="true">*</span></span>
+        <input required type="email" name="contact_email" autocomplete="email" />
+      </label>
+      <label>
+        <span class="qr-label">Phone</span>
+        <input type="tel" name="contact_phone" autocomplete="tel" />
+      </label>
+      <label>
+        <span class="qr-label">Project address</span>
+        <textarea name="project_address" rows="2" autocomplete="street-address"></textarea>
+      </label>
+      <label>
+        <span class="qr-label">Timeline</span>
+        <input type="text" name="timeline" placeholder="e.g. next 3 months" />
+      </label>
+      <label>
+        <span class="qr-label">Budget range</span>
+        <input type="text" name="budget_range" placeholder="e.g. $20k–$50k" />
+      </label>
+      <label>
+        <span class="qr-label">Project details</span>
+        <textarea name="notes" rows="4" placeholder="Rooms, zones, existing systems, integrations, etc."></textarea>
+      </label>
+      <label>
+        <span class="qr-label">Floor plan (optional — PDF or image)</span>
+        <input type="file" name="floor_plan" accept=".pdf,image/*" />
+      </label>
+
+      {%- comment %} Honeypot — real users never fill this. {% endcomment -%}
+      <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none">
+        <label>
+          Leave this field empty
+          <input type="text" name="honeypot" tabindex="-1" autocomplete="off" />
+        </label>
+      </div>
+
+      <button type="submit" class="qr-btn qr-btn--primary" data-qr-submit>
+        {{ submit_text | escape }}
+      </button>
+      <p class="qr-status" data-qr-status role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var PROXY_URL = '/apps/quote/submit';
+
+    function getPageLineIds() {
+      var nodes = document.querySelectorAll('[data-qr-request-page] [data-qr-line]');
+      var ids = [];
+      nodes.forEach(function (n) {
+        var id = n.getAttribute('data-qr-line-id');
+        if (id) ids.push(id);
+      });
+      return ids;
+    }
+
+    function setStatus(el, kind, html) {
+      if (!el) return;
+      el.setAttribute('data-kind', kind);
+      el.innerHTML = html;
+    }
+
+    async function fetchCart() {
+      var res = await fetch('/cart.js', {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error('cart_unavailable');
+      return res.json();
+    }
+
+    async function removeLines(lineIds) {
+      for (var i = 0; i < lineIds.length; i++) {
+        try {
+          await fetch('/cart/change.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: lineIds[i], quantity: 0 })
+          });
+        } catch (_) { /* best-effort */ }
+      }
+    }
+
+    function wireForm() {
+      var page = document.querySelector('[data-qr-request-page]');
+      if (!page) return;
+      var form = page.querySelector('[data-qr-form]');
+      if (!form) return;
+      var statusEl = form.querySelector('[data-qr-status]');
+      var submitBtn = form.querySelector('[data-qr-submit]');
+
+      form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        setStatus(statusEl, 'pending', 'Sending…');
+        submitBtn.disabled = true;
+
+        var pageLineIds = getPageLineIds();
+        if (pageLineIds.length === 0) {
+          setStatus(statusEl, 'error', 'Your quote is empty.');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        var cart;
+        try {
+          cart = await fetchCart();
+        } catch (_) {
+          setStatus(statusEl, 'error', 'Could not read your cart. Please refresh and try again.');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        var idSet = {};
+        pageLineIds.forEach(function (id) { idSet[id] = true; });
+
+        var items = (cart.items || []).filter(function (item) {
+          return idSet[item.key];
+        });
+
+        if (items.length === 0) {
+          setStatus(statusEl, 'error', 'Your quote is empty.');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        var fd = new FormData(form);
+        var payload = {
+          contact_name: String(fd.get('contact_name') || ''),
+          contact_email: String(fd.get('contact_email') || ''),
+          contact_phone: String(fd.get('contact_phone') || ''),
+          project_address: String(fd.get('project_address') || ''),
+          timeline: String(fd.get('timeline') || ''),
+          budget_range: String(fd.get('budget_range') || ''),
+          notes: String(fd.get('notes') || ''),
+          honeypot: String(fd.get('honeypot') || ''),
+          line_items: items.map(function (it) {
+            return {
+              variant_id: it.variant_id,
+              product_id: it.product_id,
+              product_title: it.product_title || it.title || '',
+              quantity: it.quantity,
+              key: it.key,
+              variant_title: it.variant_title || '',
+              image: it.image || '',
+              line_price: typeof it.line_price === 'number' ? it.line_price : 0
+            };
+          })
+        };
+
+        var body = new FormData();
+        body.append('payload', JSON.stringify(payload));
+        var file = fd.get('floor_plan');
+        if (file && typeof File !== 'undefined' && file instanceof File && file.size > 0) {
+          body.append('floor_plan', file);
+        }
+
+        try {
+          var res = await fetch(PROXY_URL, {
+            method: 'POST',
+            body: body,
+            credentials: 'same-origin'
+          });
+          if (!res.ok) {
+            var errJson = {};
+            try { errJson = await res.json(); } catch (_) {}
+            setStatus(statusEl, 'error', (errJson && errJson.error) ? errJson.error : 'Something went wrong. Please try again.');
+            submitBtn.disabled = false;
+            return;
+          }
+
+          var lineIds = items.map(function (it) { return it.key; });
+          await removeLines(lineIds);
+
+          setStatus(
+            statusEl,
+            'success',
+            'Thanks, we\u2019ll be in touch. You can <a href="/collections/all">continue shopping</a> or return to <a href="/cart">your cart</a>.'
+          );
+          form.reset();
+        } catch (_) {
+          setStatus(statusEl, 'error', 'Network error. Please try again.');
+          submitBtn.disabled = false;
+        }
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wireForm);
+    } else {
+      wireForm();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Quote: Request Form",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Request a Quote"
+    },
+    {
+      "type": "textarea",
+      "id": "intro",
+      "label": "Intro text",
+      "default": "Tell us about your project and we’ll get back with a tailored estimate."
+    },
+    {
+      "type": "text",
+      "id": "submit_text",
+      "label": "Submit button text",
+      "default": "Submit Quote Request"
+    }
+  ]
+}
+{% endschema %}

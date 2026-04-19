@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
-import { QuoteSubmissionSchema, QUOTE_REQUEST_TAG } from "@/lib/quote";
+import {
+  QuoteSubmissionSchema,
+  QUOTE_REQUEST_TAG,
+  type QuoteLineItem,
+} from "@/lib/quote";
 import { verifyAppProxySignature, queryFromUrl } from "@/lib/hmac";
 import { getOfflineContext } from "@/lib/shopify";
 import { findOrCreateCustomer } from "@/lib/customer";
-import { createDraftOrderFromQuote } from "@/lib/draftOrder";
+import {
+  createDraftOrderFromQuote,
+  type DraftOrderLineItem,
+} from "@/lib/draftOrder";
 import { uploadToShopifyFiles } from "@/lib/files";
 
 export const runtime = "nodejs";
+
+function toDraftLineItems(items: QuoteLineItem[]): DraftOrderLineItem[] {
+  return items.map((li) => ({
+    variantId: `gid://shopify/ProductVariant/${li.variant_id}`,
+    quantity: li.quantity,
+    title: li.product_title,
+  }));
+}
 
 export async function POST(req: Request) {
   const secret = process.env.SHOPIFY_API_SECRET;
@@ -44,6 +59,7 @@ export async function POST(req: Request) {
 
   const ctx = getOfflineContext();
 
+  let floorPlanFileId: string | undefined;
   if (filePart) {
     const maxBytes = 10 * 1024 * 1024;
     if (filePart.size > maxBytes) {
@@ -55,7 +71,7 @@ export async function POST(req: Request) {
       filename: filePart.name || "floor_plan.pdf",
       mimeType: filePart.type || "application/pdf",
     });
-    submission.floor_plan_file_id = uploaded.fileId;
+    floorPlanFileId = uploaded.fileId;
   }
 
   const customer = await findOrCreateCustomer(ctx, {
@@ -64,7 +80,15 @@ export async function POST(req: Request) {
     phone: submission.contact_phone,
   });
 
-  const draft = await createDraftOrderFromQuote(ctx, submission, customer.id);
+  const draft = await createDraftOrderFromQuote(
+    ctx,
+    {
+      submission,
+      lineItems: toDraftLineItems(submission.line_items),
+      floorPlanFileId,
+    },
+    customer.id,
+  );
 
   return NextResponse.json(
     {

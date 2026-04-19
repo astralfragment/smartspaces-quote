@@ -1,0 +1,227 @@
+{% comment %}
+  Cart-page block. Sits below the native cart and renders:
+    - A "Quote required" section listing the quote-only subset.
+    - A "Request Quote" CTA linking to /pages/request-quote.
+    - Hidden per-line spans so our script can identify quote-only line IDs
+      without refetching /cart.js.
+    - A small inline script that:
+       * if the cart has ONLY quote-only items: hides the native checkout button.
+       * if MIXED: wraps checkout clicks so we first remove quote-only lines
+         from the native cart, then navigate to /checkout.
+{% endcomment %}
+
+{{ 'quote-cart.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign raw_settings = shop.metafields.quote.settings.value
+
+  assign default_tag = 'quote-only'
+  assign default_req = 'Request Quote'
+
+  if raw_settings == blank
+    assign quote_tag = default_tag
+    assign cta_req = default_req
+  else
+    assign s = raw_settings
+    assign quote_tag = s.quoteOnlyTag | default: default_tag
+    assign cta_req = s.ctaRequestQuote | default: default_req
+  endif
+
+  assign section_title = block.settings.section_title | default: 'Quote required'
+  assign button_text = block.settings.button_text | default: cta_req
+  assign quote_page_handle = block.settings.quote_page_handle | default: 'request-quote'
+
+  assign quote_only_count = 0
+  for item in cart.items
+    assign is_q = false
+    if item.product.tags contains quote_tag
+      assign is_q = true
+    endif
+    if item.product.metafields.quote.quote_only
+      assign is_q = true
+    endif
+    if is_q
+      assign quote_only_count = quote_only_count | plus: 1
+    endif
+  endfor
+-%}
+
+{%- comment %} Hidden markers — emitted for every line, so JS has the full map. {% endcomment -%}
+{%- for item in cart.items -%}
+  {%- assign item_is_quote_only = false -%}
+  {%- if item.product.tags contains quote_tag -%}
+    {%- assign item_is_quote_only = true -%}
+  {%- endif -%}
+  {%- if item.product.metafields.quote.quote_only -%}
+    {%- assign item_is_quote_only = true -%}
+  {%- endif -%}
+  <span
+    data-qr-line
+    data-qr-line-id="{{ item.key }}"
+    data-qr-quote-only="{% if item_is_quote_only %}true{% else %}false{% endif %}"
+    hidden
+    aria-hidden="true"
+    style="display:none"
+  ></span>
+{%- endfor -%}
+
+{%- if quote_only_count > 0 -%}
+  <section class="qr-cart-section" data-qr-cart-section aria-labelledby="qr-cart-section-title-{{ block.id }}">
+    <header class="qr-cart-section__header">
+      <h2 id="qr-cart-section-title-{{ block.id }}" class="qr-cart-section__title">
+        {{ section_title | escape }}
+      </h2>
+      <p class="qr-cart-section__desc">
+        These items require a custom quote and cannot be purchased directly.
+      </p>
+    </header>
+
+    <ul class="qr-cart-section__list">
+      {%- for item in cart.items -%}
+        {%- assign item_is_quote_only = false -%}
+        {%- if item.product.tags contains quote_tag -%}
+          {%- assign item_is_quote_only = true -%}
+        {%- endif -%}
+        {%- if item.product.metafields.quote.quote_only -%}
+          {%- assign item_is_quote_only = true -%}
+        {%- endif -%}
+        {%- if item_is_quote_only -%}
+          <li class="qr-cart-item" data-qr-cart-item data-qr-line-id="{{ item.key }}">
+            {%- if item.image -%}
+              <img
+                class="qr-cart-item__img"
+                src="{{ item.image | image_url: width: 120 }}"
+                alt="{{ item.product.title | escape }}"
+                width="60"
+                height="60"
+                loading="lazy"
+              />
+            {%- else -%}
+              <div class="qr-cart-item__img qr-cart-item__img--placeholder" aria-hidden="true"></div>
+            {%- endif -%}
+            <div class="qr-cart-item__main">
+              <div class="qr-cart-item__title">{{ item.product.title | escape }}</div>
+              {%- unless item.variant.title == 'Default Title' or item.variant.title == blank -%}
+                <div class="qr-cart-item__variant">{{ item.variant.title | escape }}</div>
+              {%- endunless -%}
+              <div class="qr-cart-item__qty">Qty {{ item.quantity }}</div>
+            </div>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ul>
+
+    <div class="qr-cart-section__cta">
+      <a
+        class="qr-btn qr-btn--primary"
+        href="/pages/{{ quote_page_handle }}"
+        data-qr-request-link
+      >{{ button_text | escape }}</a>
+    </div>
+  </section>
+{%- endif -%}
+
+<script>
+  (function () {
+    var CHECKOUT_SELECTORS = [
+      '[name="checkout"]',
+      'button[type="submit"][name="checkout"]',
+      '.cart__checkout-button',
+      '.cart__ctas button[type="submit"]'
+    ];
+
+    function readLines() {
+      var nodes = document.querySelectorAll('[data-qr-line]');
+      var quoteOnlyIds = [];
+      var sellableIds = [];
+      nodes.forEach(function (n) {
+        var id = n.getAttribute('data-qr-line-id');
+        if (!id) return;
+        if (n.getAttribute('data-qr-quote-only') === 'true') {
+          quoteOnlyIds.push(id);
+        } else {
+          sellableIds.push(id);
+        }
+      });
+      return { quoteOnly: quoteOnlyIds, sellable: sellableIds };
+    }
+
+    function hideCheckout() {
+      var style = document.createElement('style');
+      style.setAttribute('data-qr-hide-checkout', 'true');
+      style.textContent =
+        CHECKOUT_SELECTORS.join(',') +
+        ' { display: none !important; }';
+      document.head.appendChild(style);
+    }
+
+    function wrapMixedCheckout(quoteOnlyIds) {
+      function handler(e) {
+        var el = e.target.closest(CHECKOUT_SELECTORS.join(','));
+        if (!el) return;
+        if (el.getAttribute('data-qr-wrapped-clicked') === 'true') return;
+        e.preventDefault();
+        e.stopPropagation();
+        el.setAttribute('data-qr-wrapped-clicked', 'true');
+        if (el.disabled !== undefined) el.disabled = true;
+
+        Promise.all(
+          quoteOnlyIds.map(function (id) {
+            return fetch('/cart/change.js', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({ id: id, quantity: 0 })
+            }).catch(function () { /* best-effort */ });
+          })
+        ).then(function () {
+          window.location = '/checkout';
+        });
+      }
+      document.addEventListener('click', handler, true);
+    }
+
+    function boot() {
+      var lines = readLines();
+      if (lines.quoteOnly.length === 0) return;
+      if (lines.sellable.length === 0) {
+        hideCheckout();
+      } else {
+        wrapMixedCheckout(lines.quoteOnly);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Quote: Cart Request",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section title",
+      "default": "Quote required"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text (falls back to shop CTA setting)",
+      "default": "Request Quote"
+    },
+    {
+      "type": "text",
+      "id": "quote_page_handle",
+      "label": "Quote page handle",
+      "default": "request-quote"
+    }
+  ]
+}
+{% endschema %}

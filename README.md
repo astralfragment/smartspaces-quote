@@ -1,6 +1,6 @@
 # SmartSpaces Quote — Shopify Request-a-Quote app
 
-Storefront-first Shopify app for high-end home automation dealers. Hides price and the buy button on quote-only products, lets shoppers build a "quote cart," and submits a request that becomes a **Shopify Draft Order**. The merchant then edits pricing and adds service line items (install, programming, design) in Shopify's native **Drafts admin** and clicks **Send invoice**. **Zero custom admin UI** — merchants mark products as quote-only via the native `quote.quote_only` metafield (pinned to the product page) and manage intake email via Shopify Flow. No app database.
+Storefront-first Shopify app for high-end home automation dealers. Uses Shopify's native cart — quote-only products are flagged so the PDP hides price and relabels Add-to-Cart as "Add to Quote." The cart page shows a "Quote required" section listing the quote-only subset with a "Request Quote" CTA that leads to a short request form. Submissions become **Shopify Draft Orders** tagged `quote-request`, which the merchant edits and sends via **Drafts admin**. **Zero custom admin UI** beyond a small settings page — merchants mark products as quote-only via the pinned `quote.quote_only` metafield and manage intake email via Shopify Flow. No app database.
 
 Built for zero recurring SaaS: no Prisma, no Redis, no Resend, no BotID. Everything runs on Shopify-native primitives plus one small Next.js backend on Vercel.
 
@@ -10,9 +10,9 @@ Built for zero recurring SaaS: no Prisma, no Redis, no Resend, no BotID. Everyth
 
 ```
 Storefront (Liquid theme)
- ├─ product-quote-button block  → replaces price + buy button on quote-only PDPs
- ├─ quote-cart-drawer embed     → floating button + slide-over list
- └─ quote-cart-page block       → /pages/request-quote form
+ ├─ product-quote-button block  → on quote-only PDPs, hides price + relabels native Add-to-Cart
+ ├─ cart-request-quote block    → cart-page "Quote required" section + checkout gating
+ └─ quote-request-form block    → /pages/request-quote form (cart summary + submit)
 
    ▼ POST /apps/quote/submit (HMAC-signed App Proxy)
 
@@ -20,7 +20,6 @@ Next.js server (Vercel)
  ├─ /api/proxy/submit   → verify HMAC → (opt) upload file to Shopify Files
  │                        → findOrCreateCustomer → draftOrderCreate
  │                          (tagged "quote-request", project metadata as custom attrs)
- ├─ /api/proxy/cart     → logged-in customer quote-cart sync via customer metafield
  ├─ /api/auth/*         → OAuth install/callback; defines metafields on install
  └─ /api/webhooks/…     → app/uninstalled
 
@@ -34,7 +33,7 @@ Shopify Flow (free) — triggered by Draft order created + tag "quote-request"
 | Where | Key | Purpose |
 |---|---|---|
 | Product metafield | `quote.quote_only` (boolean, **pinned**) | Marks non-purchasable SKUs. Edit from the native product page. |
-| Customer metafield | `quote.cart` (json) | Persists quote cart for logged-in customers (app-managed) |
+| Shop metafield | `quote.settings` (json) | Copy + toggles (CTA text, quote-only tag, price-hiding) set via the embedded admin. |
 | Draft Order (tag: `quote-request`) | — | **The quote itself.** Merchant edits in native Drafts admin. |
 | Draft Order custom attributes | `phone`, `project_address`, `timeline`, `budget_range`, `floor_plan_file_id`, `source` | Project metadata snapshot |
 
@@ -48,7 +47,6 @@ app/
   api/
     auth/[...shopify]/ # OAuth install + callback; creates metafield definitions
     proxy/submit/      # App Proxy POST: HMAC-verified quote submission
-    proxy/cart/        # App Proxy GET/PUT: logged-in cart sync
     webhooks/
       app-uninstalled/
 lib/
@@ -182,10 +180,10 @@ vercel deploy --prod --yes
 ### 7. Configure the storefront
 
 1. In the dev store's **theme editor** (Online Store → Themes → Customize):
-   - **App embeds** → enable **Quote: Cart Drawer**.
    - **Product template** → add **Quote: Product CTA** to the main section.
+   - **Cart template** → add **Quote: Cart Request** below the cart.
 2. Create a new page: **Online Store → Pages → Add page** with handle `request-quote`.
-3. Edit the page in the theme editor → add **Quote: Request Page** block.
+3. Edit the page in the theme editor → add **Quote: Request Form** block.
 4. Mark at least one test product as quote-only:
    - Open the product in Shopify admin.
    - The pinned field **Quote only** appears near the top — toggle it on.
@@ -202,10 +200,10 @@ vercel deploy --prod --yes
 
 ## End-to-end test
 
-1. From the dev store storefront, open a quote-only product. Confirm price is hidden and "Request Quote" shows instead of "Add to Cart."
-2. Click "Request Quote." Drawer opens with the item.
-3. Click the CTA → lands on `/pages/request-quote`.
-4. Fill the form (guest email), attach a floor plan, submit.
+1. From the dev store storefront, open a quote-only product. Confirm the price is hidden and the Add-to-Cart button reads "Add to Quote."
+2. Click "Add to Quote" — the product is added to Shopify's native cart.
+3. Go to `/cart`. Confirm the "Quote required" section lists only quote-only items, the "Request Quote" CTA is visible, and — if the cart has ONLY quote-only items — the native Checkout button is hidden.
+4. Click **Request Quote** → lands on `/pages/request-quote`. Fill the form (guest email), attach a floor plan, submit.
 5. Check **Shopify Admin → Orders → Drafts → filter tag `quote-request`**. Your submission should appear with project metadata and the floor plan file ID in custom attributes.
 6. Check **Shopify Flow → Run history** — both email workflows should have fired.
 7. Open the draft. Edit line prices. Add a custom line item like "Installation — 8 hrs @ $150". Click **Send invoice**.
