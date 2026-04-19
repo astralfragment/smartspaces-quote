@@ -132,6 +132,26 @@
       '.cart__ctas button[type="submit"]'
     ];
 
+    var QUOTE_ROW_SELECTORS = [
+      '[data-cart-item-key="{ID}"]',
+      '[data-key="{ID}"]',
+      '[data-line-key="{ID}"]',
+      '[data-line-item-key="{ID}"]',
+      'tr[data-variant-id][data-key="{ID}"]',
+      '.cart-item[data-key="{ID}"]',
+      '.cart__row[data-key="{ID}"]'
+    ];
+
+    var HEADING_SELECTORS =
+      'main h1, .cart h1, .page-width h1, #CartDrawer-Heading, .cart__heading';
+
+    function cssEscape(v) {
+      if (window.CSS && typeof window.CSS.escape === 'function') {
+        return window.CSS.escape(v);
+      }
+      return String(v).replace(/([^\w-])/g, '\\$1');
+    }
+
     function readLines() {
       var nodes = document.querySelectorAll('[data-qr-line]');
       var quoteOnlyIds = [];
@@ -146,6 +166,76 @@
         }
       });
       return { quoteOnly: quoteOnlyIds, sellable: sellableIds };
+    }
+
+    function findRowForId(id) {
+      var safe = cssEscape(id);
+      for (var i = 0; i < QUOTE_ROW_SELECTORS.length; i++) {
+        var sel = QUOTE_ROW_SELECTORS[i].replace('{ID}', safe);
+        var el;
+        try {
+          el = document.querySelector(sel);
+        } catch (_) {
+          el = null;
+        }
+        if (el) return el;
+      }
+      return null;
+    }
+
+    function addBadgeToRow(row) {
+      if (row.querySelector('[data-qr-badge]')) return;
+      var badge = document.createElement('span');
+      badge.setAttribute('data-qr-badge', '');
+      badge.className = 'qr-badge qr-badge--quote';
+      badge.textContent = 'Quote required';
+      var host =
+        row.querySelector('.cart-item__details, .cart__row-title, td') || row;
+      host.insertBefore(badge, host.firstChild);
+    }
+
+    function markNativeRows() {
+      var markers = document.querySelectorAll('[data-qr-line][data-qr-quote-only="true"]');
+      markers.forEach(function (m) {
+        var id = m.getAttribute('data-qr-line-id');
+        if (!id) return;
+        var row = findRowForId(id);
+        if (!row) return;
+        row.classList.add('qr-line--quote-only');
+        row.setAttribute('data-qr-quote-only', 'true');
+        addBadgeToRow(row);
+      });
+    }
+
+    function rewriteHeading() {
+      var targets = document.querySelectorAll(HEADING_SELECTORS);
+      for (var i = 0; i < targets.length; i++) {
+        var t = targets[i];
+        if (t && /cart/i.test(t.textContent) && !t.getAttribute('data-qr-heading-rewritten')) {
+          t.textContent = 'Your Cart & Quote';
+          t.setAttribute('data-qr-heading-rewritten', 'true');
+          break;
+        }
+      }
+    }
+
+    function observeCart() {
+      var anchor =
+        document.querySelector("form[action*='/cart']") ||
+        document.querySelector('[data-cart-items]') ||
+        document.querySelector('main') ||
+        document.body;
+      if (!anchor || !('MutationObserver' in window)) return;
+      var timer = null;
+      var observer = new MutationObserver(function () {
+        if (timer) return;
+        timer = setTimeout(function () {
+          timer = null;
+          markNativeRows();
+          rewriteHeading();
+        }, 50);
+      });
+      observer.observe(anchor, { childList: true, subtree: true });
     }
 
     function hideCheckout() {
@@ -186,6 +276,9 @@
     function boot() {
       var lines = readLines();
       if (lines.quoteOnly.length === 0) return;
+      markNativeRows();
+      rewriteHeading();
+      observeCart();
       if (lines.sellable.length === 0) {
         hideCheckout();
       } else {

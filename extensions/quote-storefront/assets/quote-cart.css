@@ -364,3 +364,33 @@
   color: #666;
 }
 .qr-file-hint--error { color: #a00; }
+
+/* --------------------------------------------------------------------------
+   Native cart row projection — hide price surfaces on quote-only rows,
+   show a "Quote required" badge. Scoped under .qr-line--quote-only only.
+   -------------------------------------------------------------------------- */
+
+.qr-line--quote-only :is(
+  .price, .price__current, .price__sale, .price__regular,
+  .cart-item__price, .cart-item__price-wrapper, .cart-item__totals,
+  .cart__line-total, .line-item__total, .product-price,
+  [class*="__price"], [class*="-price"], [data-cart-item-price]
+) {
+  visibility: hidden !important;
+}
+
+.qr-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+.qr-badge--quote {
+  background: #fdf7e8;
+  color: #7a5a1c;
+  border: 1px solid #d9c89b;
+  margin-right: 8px;
+}
