@@ -147,6 +147,7 @@
   }
 
   function renderCartSection(settings, cart) {
+    if (document.querySelector(".qr-cart-section")) return;
     var items = cart.items || [];
     var quoteItems = filterQuoteItems(items, settings);
     var sellableCount = items.length - quoteItems.length;
