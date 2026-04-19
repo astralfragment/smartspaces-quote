@@ -94,6 +94,17 @@ async function handleCallback(url: URL) {
 
   await ensureMetafieldDefinitions(shop, access_token);
 
+  if (process.env.SHOPIFY_SHOW_TOKEN_ON_INSTALL === "1") {
+    return new NextResponse(
+      `<!doctype html><html><body style="font-family:system-ui;padding:40px;max-width:720px;margin:auto">
+<h1>Install complete</h1><p>Shop: <code>${shop}</code></p>
+<p>New access token (save as <code>SHOPIFY_OFFLINE_TOKEN</code> in Vercel):</p>
+<pre style="padding:12px;background:#111;color:#8f8;border-radius:6px;word-break:break-all;white-space:pre-wrap">${access_token}</pre>
+<p><strong>Unset SHOPIFY_SHOW_TOKEN_ON_INSTALL after capture.</strong></p></body></html>`,
+      { status: 200, headers: { "content-type": "text/html; charset=utf-8" } },
+    );
+  }
+
   const hostParam = url.searchParams.get("host") ?? "";
   const adminRedirect = `https://${shop}/admin/apps/${clientId()}?host=${encodeURIComponent(hostParam)}`;
   return NextResponse.redirect(adminRedirect);

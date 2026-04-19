@@ -17,7 +17,7 @@ api_version = "2026-07"
   uri = "/api/webhooks/app-uninstalled"
 
 [access_scopes]
-scopes = "read_customers,read_draft_orders,read_products,write_content,write_customers,write_draft_orders,write_files,write_products"
+scopes = "read_customers,read_draft_orders,read_products,read_themes,write_content,write_customers,write_draft_orders,write_files,write_products,write_themes"
 
 [auth]
 redirect_urls = [
