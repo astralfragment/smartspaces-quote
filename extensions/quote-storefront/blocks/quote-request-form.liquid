@@ -28,9 +28,9 @@
     assign quote_tag = s.quoteOnlyTag | default: default_tag
   endif
 
-  assign heading = block.settings.heading | default: 'Request a Quote'
-  assign intro = block.settings.intro | default: 'Tell us about your project and we’ll get back with a tailored estimate.'
-  assign submit_text = block.settings.submit_text | default: default_submit_text
+  assign heading = 'Request a Quote'
+  assign intro = 'Tell us about your project and we’ll get back with a tailored estimate.'
+  assign submit_text = default_submit_text
 
   assign quote_only_count = 0
   for item in cart.items
@@ -47,6 +47,7 @@
   endfor
 -%}
 
+{%- if template.name == 'page' and page.handle == 'request-quote' -%}
 <section
   class="qr-request-page"
   data-qr-request-page
@@ -311,30 +312,12 @@
     }
   })();
 </script>
+{%- endif -%}
 
 {% schema %}
 {
   "name": "Quote: Request Form",
-  "target": "section",
-  "settings": [
-    {
-      "type": "text",
-      "id": "heading",
-      "label": "Heading",
-      "default": "Request a Quote"
-    },
-    {
-      "type": "textarea",
-      "id": "intro",
-      "label": "Intro text",
-      "default": "Tell us about your project and we’ll get back with a tailored estimate."
-    },
-    {
-      "type": "text",
-      "id": "submit_text",
-      "label": "Submit button text",
-      "default": "Submit Quote Request"
-    }
-  ]
+  "target": "body",
+  "settings": []
 }
 {% endschema %}

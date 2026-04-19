@@ -27,9 +27,9 @@
     assign cta_req = s.ctaRequestQuote | default: default_req
   endif
 
-  assign section_title = block.settings.section_title | default: 'Quote required'
-  assign button_text = block.settings.button_text | default: cta_req
-  assign quote_page_handle = block.settings.quote_page_handle | default: 'request-quote'
+  assign section_title = 'Quote required'
+  assign button_text = cta_req
+  assign quote_page_handle = 'request-quote'
 
   assign quote_only_count = 0
   for item in cart.items
@@ -45,6 +45,8 @@
     endif
   endfor
 -%}
+
+{%- if template.name == 'cart' -%}
 
 {%- comment %} Hidden markers — emitted for every line, so JS has the full map. {% endcomment -%}
 {%- for item in cart.items -%}
@@ -199,29 +201,12 @@
   })();
 </script>
 
+{%- endif -%}
+
 {% schema %}
 {
   "name": "Quote: Cart Request",
-  "target": "section",
-  "settings": [
-    {
-      "type": "text",
-      "id": "section_title",
-      "label": "Section title",
-      "default": "Quote required"
-    },
-    {
-      "type": "text",
-      "id": "button_text",
-      "label": "Button text (falls back to shop CTA setting)",
-      "default": "Request Quote"
-    },
-    {
-      "type": "text",
-      "id": "quote_page_handle",
-      "label": "Quote page handle",
-      "default": "request-quote"
-    }
-  ]
+  "target": "body",
+  "settings": []
 }
 {% endschema %}

@@ -46,15 +46,12 @@
   endif
 -%}
 
-{%- if is_quote_only -%}
+{%- if template.name == 'product' and is_quote_only -%}
   {%- if hide_price_pdp -%}
     <style>
-      #MainProduct-{{ section.id }} .price,
-      #MainProduct-{{ section.id }} .product__price,
-      #MainProduct-{{ section.id }} [data-product-price],
-      #shopify-section-{{ section.id }} .price,
-      #shopify-section-{{ section.id }} .product__price,
-      #shopify-section-{{ section.id }} [data-product-price] {
+      .price,
+      .product__price,
+      [data-product-price] {
         display: none !important;
       }
     </style>
@@ -62,14 +59,10 @@
 
   <script>
     (function () {
-      var SECTION_ID = {{ section.id | json }};
       var CTA_TEXT = {{ cta_add | json }};
 
       function relabel() {
-        var scope =
-          document.getElementById('MainProduct-' + SECTION_ID) ||
-          document.getElementById('shopify-section-' + SECTION_ID) ||
-          document;
+        var scope = document;
 
         var selectors = [
           '.product-form__submit',
@@ -120,14 +113,7 @@
 {% schema %}
 {
   "name": "Quote: Product CTA",
-  "target": "section",
-  "settings": [
-    {
-      "type": "text",
-      "id": "quote_page_handle",
-      "label": "Quote page handle",
-      "default": "request-quote"
-    }
-  ]
+  "target": "body",
+  "settings": []
 }
 {% endschema %}
