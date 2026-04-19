@@ -90,6 +90,16 @@
           document.head.appendChild(style);
         }
 
+        var hideDyn = document.createElement("style");
+        hideDyn.textContent = [
+          ".shopify-payment-button",
+          "button[name=\"checkout\"]",
+          ".product-form__payment-container",
+          "[data-shopify=\"payment-button\"]",
+          ".dynamic-checkout",
+        ].join(",") + " { display: none !important; }";
+        document.head.appendChild(hideDyn);
+
         var btns = Array.from(document.querySelectorAll(".product-form__submit, button[name=\"add\"], [data-add-to-cart]"));
         var seen = new Set();
         btns.forEach(function (btn) {
