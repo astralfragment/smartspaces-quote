@@ -17,6 +17,7 @@ tsconfig.tsbuildinfo
 
 .playwright-mcp/
 
-# Plans are local-only artifacts, not project source
+# Plans + working checklists are local-only artifacts, not project source
 docs/superpowers/
 docs/plans/
+docs/launch-checklist.md
