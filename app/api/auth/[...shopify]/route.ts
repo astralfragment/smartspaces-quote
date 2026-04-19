@@ -111,27 +111,22 @@ async function ensureMetafieldDefinitions(shop: string, token: string) {
   const defs = [
     {
       name: "Quote only",
+      description: "Hide price + buy button on the storefront; show Request Quote instead.",
       namespace: "quote",
       key: "quote_only",
       type: "boolean",
       ownerType: "PRODUCT",
+      pin: true,
       access: { admin: "MERCHANT_READ_WRITE", storefront: "PUBLIC_READ" },
     },
     {
       name: "Quote cart",
+      description: "Persisted quote cart for logged-in customers (managed by the app).",
       namespace: "quote",
       key: "cart",
       type: "json",
       ownerType: "CUSTOMER",
-      access: { admin: "MERCHANT_READ_WRITE" },
-    },
-    {
-      name: "Quote settings",
-      namespace: "quote",
-      key: "settings",
-      type: "json",
-      ownerType: "SHOP",
-      access: { admin: "MERCHANT_READ_WRITE" },
+      access: { admin: "MERCHANT_READ" },
     },
   ];
   const url = `https://${shop}/admin/api/${API_VERSION}/graphql.json`;

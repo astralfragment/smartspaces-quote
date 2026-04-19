@@ -1,6 +1,6 @@
 # SmartSpaces Quote — Shopify Request-a-Quote app
 
-Storefront-first Shopify app for high-end home automation dealers. Hides price and the buy button on quote-only products, lets shoppers build a "quote cart," and submits a request that becomes a **Shopify Draft Order**. The merchant then edits pricing and adds service line items (install, programming, design) in Shopify's native **Drafts admin** and clicks **Send invoice**. No custom admin UI beyond a single settings page; no app database; Shopify Flow handles all intake email.
+Storefront-first Shopify app for high-end home automation dealers. Hides price and the buy button on quote-only products, lets shoppers build a "quote cart," and submits a request that becomes a **Shopify Draft Order**. The merchant then edits pricing and adds service line items (install, programming, design) in Shopify's native **Drafts admin** and clicks **Send invoice**. **Zero custom admin UI** — merchants mark products as quote-only via the native `quote.quote_only` metafield (pinned to the product page) and manage intake email via Shopify Flow. No app database.
 
 Built for zero recurring SaaS: no Prisma, no Redis, no Resend, no BotID. Everything runs on Shopify-native primitives plus one small Next.js backend on Vercel.
 
@@ -22,8 +22,7 @@ Next.js server (Vercel)
  │                          (tagged "quote-request", project metadata as custom attrs)
  ├─ /api/proxy/cart     → logged-in customer quote-cart sync via customer metafield
  ├─ /api/auth/*         → OAuth install/callback; defines metafields on install
- ├─ /api/webhooks/…     → app/uninstalled
- └─ /admin              → single settings page (bulk toggle quote-only, form config)
+ └─ /api/webhooks/…     → app/uninstalled
 
 Shopify Flow (free) — triggered by Draft order created + tag "quote-request"
  ├─ Email the merchant
@@ -34,10 +33,9 @@ Shopify Flow (free) — triggered by Draft order created + tag "quote-request"
 
 | Where | Key | Purpose |
 |---|---|---|
-| Product metafield | `quote.quote_only` (boolean) | Marks non-purchasable SKUs |
-| Customer metafield | `quote.cart` (json) | Persists quote cart for logged-in customers |
-| Shop metafield | `quote.settings` (json) | Form-field toggles, merchant email |
-| Draft Order (tag: `quote-request`) | — | **The quote itself.** Merchant edits in native admin. |
+| Product metafield | `quote.quote_only` (boolean, **pinned**) | Marks non-purchasable SKUs. Edit from the native product page. |
+| Customer metafield | `quote.cart` (json) | Persists quote cart for logged-in customers (app-managed) |
+| Draft Order (tag: `quote-request`) | — | **The quote itself.** Merchant edits in native Drafts admin. |
 | Draft Order custom attributes | `phone`, `project_address`, `timeline`, `budget_range`, `floor_plan_file_id`, `source` | Project metadata snapshot |
 
 ---
@@ -46,7 +44,7 @@ Shopify Flow (free) — triggered by Draft order created + tag "quote-request"
 
 ```
 app/
-  admin/               # Single settings page (server actions + client form)
+  page.tsx             # Info page (what the merchant sees when clicking the app in admin)
   api/
     auth/[...shopify]/ # OAuth install + callback; creates metafield definitions
     proxy/submit/      # App Proxy POST: HMAC-verified quote submission
@@ -188,7 +186,10 @@ vercel deploy --prod --yes
    - **Product template** → add **Quote: Product CTA** to the main section.
 2. Create a new page: **Online Store → Pages → Add page** with handle `request-quote`.
 3. Edit the page in the theme editor → add **Quote: Request Page** block.
-4. Mark at least one test product as quote-only: go to `https://smartspaces-quote.vercel.app/` (the admin settings) or directly set the `quote.quote_only` metafield on the product to `true`, and add the tag `quote-only`.
+4. Mark at least one test product as quote-only:
+   - Open the product in Shopify admin.
+   - The pinned field **Quote only** appears near the top — toggle it on.
+   - Add the tag `quote-only` (so collection-grid price also hides on that card).
 
 ### 8. Install Shopify Flow + import workflow templates
 
