@@ -94,25 +94,6 @@ async function handleCallback(url: URL) {
 
   await ensureMetafieldDefinitions(shop, access_token);
 
-  // One-time token display for single-store custom install. Disable after copy.
-  if (process.env.SHOPIFY_SHOW_TOKEN_ON_INSTALL === "1") {
-    const body = `<!doctype html>
-<html><head><meta charset="utf-8"><title>Install complete</title>
-<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#222}
-code{background:#f2f2f2;padding:2px 6px;border-radius:4px}
-.token{display:block;padding:16px;background:#111;color:#8f8;border-radius:8px;font-family:ui-monospace,Menlo,monospace;word-break:break-all;margin:16px 0}
-.warn{background:#fff3cd;border:1px solid #f1c40f;padding:12px 16px;border-radius:6px}</style></head>
-<body>
-<h1>Install complete</h1>
-<p>Shop: <code>${shop}</code></p>
-<p>Copy this access token into Vercel as <code>SHOPIFY_OFFLINE_TOKEN</code>:</p>
-<div class="token">${access_token}</div>
-<p class="warn"><strong>Important:</strong> after you've saved the token, unset <code>SHOPIFY_SHOW_TOKEN_ON_INSTALL</code> in Vercel and redeploy. Leaving this on exposes tokens on re-install.</p>
-<p>Next steps are in <a href="https://github.com/${process.env.GITHUB_REPO || ""}/blob/main/README.md">README.md</a>.</p>
-</body></html>`;
-    return new NextResponse(body, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
-  }
-
   const hostParam = url.searchParams.get("host") ?? "";
   const adminRedirect = `https://${shop}/admin/apps/${clientId()}?host=${encodeURIComponent(hostParam)}`;
   return NextResponse.redirect(adminRedirect);
