@@ -12,6 +12,7 @@ import {
   type DraftOrderLineItem,
 } from "@/lib/draftOrder";
 import { uploadToShopifyFiles } from "@/lib/files";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,22 @@ function toDraftLineItems(items: QuoteLineItem[]): DraftOrderLineItem[] {
 export async function POST(req: Request) {
   const secret = process.env.SHOPIFY_API_SECRET;
   if (!secret) return NextResponse.json({ error: "server_not_configured" }, { status: 500 });
+
+  const xff = req.headers.get("x-forwarded-for");
+  const ip =
+    req.headers.get("x-real-ip") ||
+    (xff ? xff.split(",").map((s) => s.trim()).filter(Boolean).pop() : null) ||
+    "unknown";
+  const rl = checkRateLimit(`submit:${ip}`, { limit: 5, windowMs: 60_000 });
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited" },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+      },
+    );
+  }
 
   const query = queryFromUrl(req.url);
   if (!verifyAppProxySignature(query, secret)) {
@@ -49,13 +66,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unsupported_content_type" }, { status: 415 });
   }
 
+  if (
+    payload &&
+    typeof payload === "object" &&
+    typeof (payload as { honeypot?: unknown }).honeypot === "string" &&
+    (payload as { honeypot: string }).honeypot.length > 0
+  ) {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
   const parsed = QuoteSubmissionSchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json({ error: "validation_failed", issues: parsed.error.issues }, { status: 400 });
   }
   const submission = parsed.data;
-
-  if (submission.honeypot) return NextResponse.json({ ok: true }, { status: 200 });
 
   const ctx = getOfflineContext();
 
